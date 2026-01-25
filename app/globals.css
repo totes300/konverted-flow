@@ -38,6 +38,34 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Status colors - soft pastels */
+    --status-today-bg: 35 100% 95%;
+    --status-today-text: 35 60% 40%;
+    --status-next-up-bg: 220 100% 96%;
+    --status-next-up-text: 220 55% 50%;
+    --status-in-progress-bg: 270 100% 96%;
+    --status-in-progress-text: 270 45% 50%;
+    --status-admin-review-bg: 15 100% 95%;
+    --status-admin-review-text: 15 55% 45%;
+    --status-client-review-bg: 180 70% 94%;
+    --status-client-review-text: 180 45% 40%;
+    --status-stuck-bg: 350 100% 96%;
+    --status-stuck-text: 350 55% 50%;
+    --status-done-bg: 150 60% 94%;
+    --status-done-text: 150 45% 35%;
+
+    /* Priority colors */
+    --priority-high-bg: 0 85% 96%;
+    --priority-high-text: 0 50% 48%;
+    --priority-medium-bg: 40 100% 95%;
+    --priority-medium-text: 40 55% 40%;
+    --priority-low-bg: 220 15% 95%;
+    --priority-low-text: 220 10% 45%;
+
+    /* Task row effects */
+    --task-row-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --task-container-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   }
 
   .dark {
@@ -73,6 +101,34 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Dark mode status colors - deeper, muted */
+    --status-today-bg: 35 30% 18%;
+    --status-today-text: 35 60% 70%;
+    --status-next-up-bg: 220 30% 18%;
+    --status-next-up-text: 220 55% 70%;
+    --status-in-progress-bg: 270 30% 18%;
+    --status-in-progress-text: 270 45% 70%;
+    --status-admin-review-bg: 15 30% 18%;
+    --status-admin-review-text: 15 55% 70%;
+    --status-client-review-bg: 180 30% 18%;
+    --status-client-review-text: 180 45% 70%;
+    --status-stuck-bg: 350 30% 18%;
+    --status-stuck-text: 350 55% 70%;
+    --status-done-bg: 150 30% 18%;
+    --status-done-text: 150 45% 70%;
+
+    /* Dark mode priority colors */
+    --priority-high-bg: 0 30% 18%;
+    --priority-high-text: 0 50% 70%;
+    --priority-medium-bg: 40 30% 18%;
+    --priority-medium-text: 40 55% 70%;
+    --priority-low-bg: 220 15% 18%;
+    --priority-low-text: 220 10% 65%;
+
+    /* Dark mode task row effects */
+    --task-row-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --task-container-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   }
 }
 

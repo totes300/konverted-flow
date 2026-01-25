@@ -59,7 +59,7 @@ export function AssigneeCell({ taskId, assigneeIds }: AssigneeCellProps) {
           {assignedUsers.length > 0 ? (
             <div className="flex -space-x-2">
               {assignedUsers.slice(0, 3).map((user) => (
-                <Avatar key={user._id} className="h-6 w-6 border-2 border-background">
+                <Avatar key={user._id} className="h-6 w-6 border-[1.5px] border-background ring-1 ring-border/20">
                   <AvatarImage src={user.avatarUrl} alt={user.name} />
                   <AvatarFallback className="text-xs">
                     {getInitials(user.name)}

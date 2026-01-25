@@ -50,7 +50,10 @@ export function TodayGridRow({ task, clientName, onTaskClick }: TodayGridRowProp
       ref={setNodeRef}
       style={{ ...style, gridTemplateColumns: TODAY_GRID_COLUMNS }}
       className={cn(
-        "grid items-center border-b hover:bg-muted/30 transition-colors group",
+        "group/row grid items-center",
+        "border-b border-border/40",
+        "hover:bg-muted/30",
+        "transition-colors duration-100",
         isDragging && "opacity-50 shadow-lg bg-card z-50",
         task.status !== "today" && "animate-out fade-out slide-out-to-right duration-300"
       )}
@@ -60,7 +63,7 @@ export function TodayGridRow({ task, clientName, onTaskClick }: TodayGridRowProp
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab touch-none text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+          className="cursor-grab touch-none text-muted-foreground opacity-0 transition-opacity group-hover/row:opacity-100 focus:opacity-100"
         >
           <IconGripVertical className="h-5 w-5" />
         </button>

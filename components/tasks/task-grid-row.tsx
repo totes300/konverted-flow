@@ -41,9 +41,12 @@ export function TaskGridRow({
   return (
     <div
       className={cn(
-        "grid items-center border-b hover:bg-muted/30 transition-colors",
+        "group/row grid items-center",
+        "border-b border-border/40",
+        "hover:bg-muted/30",
+        "transition-colors duration-100",
         isSelected && "bg-primary/5",
-        isFocused && "ring-2 ring-primary ring-inset"
+        isFocused && "ring-1 ring-primary/50 ring-inset"
       )}
       style={{ gridTemplateColumns: TASK_GRID_COLUMNS }}
     >
@@ -86,7 +89,7 @@ export function TaskGridRow({
       <div className="py-2 min-w-0 whitespace-nowrap">
         <TimeCell taskId={task._id} totalTimeSeconds={task.totalTimeSeconds} />
       </div>
-      <div className="py-2">
+      <div className="py-2 opacity-0 group-hover/row:opacity-100 transition-opacity duration-150">
         <TaskActions taskId={task._id} onEdit={handleRowClick} />
       </div>
     </div>

@@ -61,7 +61,7 @@ export function TaskActions({ taskId, onEdit }: TaskActionsProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-7 w-7 text-muted-foreground/70 hover:text-foreground hover:bg-muted/50"
             onClick={onEdit}
           >
             <IconPencil className="h-4 w-4" />
@@ -75,7 +75,7 @@ export function TaskActions({ taskId, onEdit }: TaskActionsProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-7 w-7 text-muted-foreground/70 hover:text-foreground hover:bg-muted/50"
             onClick={handleDuplicate}
           >
             <IconCopy className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function TaskActions({ taskId, onEdit }: TaskActionsProps) {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/70 hover:text-foreground hover:bg-muted/50">
             <IconArchive className="h-4 w-4" />
           </Button>
         </TooltipTrigger>

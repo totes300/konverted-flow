@@ -39,9 +39,9 @@ export function TaskRow({
   return (
     <TableRow
       className={cn(
-        "group hover:bg-muted/30 transition-colors",
+        "group/row hover:bg-muted/30 transition-colors duration-100",
         isSelected && "bg-primary/5",
-        isFocused && "ring-2 ring-primary ring-inset"
+        isFocused && "ring-1 ring-primary/50 ring-inset"
       )}
     >
       <TableCell className="w-[40px]">

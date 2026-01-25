@@ -17,56 +17,56 @@ export type TaskPriority = "low" | "medium" | "high";
 export const STATUS_CONFIG: Record<TaskStatus, { label: string; bg: string; text: string }> = {
   today: {
     label: "Today",
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    text: "text-amber-700 dark:text-amber-400",
+    bg: "bg-[hsl(var(--status-today-bg))]",
+    text: "text-[hsl(var(--status-today-text))]",
   },
   next_up: {
     label: "Next up",
-    bg: "bg-blue-100 dark:bg-blue-900/30",
-    text: "text-blue-700 dark:text-blue-400",
+    bg: "bg-[hsl(var(--status-next-up-bg))]",
+    text: "text-[hsl(var(--status-next-up-text))]",
   },
   in_progress: {
     label: "In Progress",
-    bg: "bg-violet-100 dark:bg-violet-900/30",
-    text: "text-violet-700 dark:text-violet-400",
+    bg: "bg-[hsl(var(--status-in-progress-bg))]",
+    text: "text-[hsl(var(--status-in-progress-text))]",
   },
   admin_review: {
     label: "Admin Review",
-    bg: "bg-orange-100 dark:bg-orange-900/30",
-    text: "text-orange-700 dark:text-orange-400",
+    bg: "bg-[hsl(var(--status-admin-review-bg))]",
+    text: "text-[hsl(var(--status-admin-review-text))]",
   },
   client_review: {
     label: "Client Review",
-    bg: "bg-cyan-100 dark:bg-cyan-900/30",
-    text: "text-cyan-700 dark:text-cyan-400",
+    bg: "bg-[hsl(var(--status-client-review-bg))]",
+    text: "text-[hsl(var(--status-client-review-text))]",
   },
   stuck: {
     label: "Stuck",
-    bg: "bg-red-100 dark:bg-red-900/30",
-    text: "text-red-700 dark:text-red-400",
+    bg: "bg-[hsl(var(--status-stuck-bg))]",
+    text: "text-[hsl(var(--status-stuck-text))]",
   },
   done: {
     label: "Done",
-    bg: "bg-emerald-100 dark:bg-emerald-900/30",
-    text: "text-emerald-700 dark:text-emerald-400",
+    bg: "bg-[hsl(var(--status-done-bg))]",
+    text: "text-[hsl(var(--status-done-text))]",
   },
 };
 
 export const PRIORITY_CONFIG: Record<TaskPriority, { label: string; bg: string; text: string }> = {
   high: {
     label: "High",
-    bg: "bg-red-100 dark:bg-red-900/30",
-    text: "text-red-700 dark:text-red-400",
+    bg: "bg-[hsl(var(--priority-high-bg))]",
+    text: "text-[hsl(var(--priority-high-text))]",
   },
   medium: {
     label: "Medium",
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    text: "text-amber-700 dark:text-amber-400",
+    bg: "bg-[hsl(var(--priority-medium-bg))]",
+    text: "text-[hsl(var(--priority-medium-text))]",
   },
   low: {
     label: "Low",
-    bg: "bg-slate-100 dark:bg-slate-800/50",
-    text: "text-slate-600 dark:text-slate-400",
+    bg: "bg-[hsl(var(--priority-low-bg))]",
+    text: "text-[hsl(var(--priority-low-text))]",
   },
 };
 

@@ -57,7 +57,7 @@ export function TaskGroup({
       className="rounded-lg overflow-hidden"
     >
       <CollapsibleTrigger className="w-full">
-        <div className="flex items-center gap-2 px-4 py-2 bg-muted/20 hover:bg-muted/40 transition-colors">
+        <div className="flex items-center gap-2 px-4 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
           <IconChevronRight
             className={cn(
               "h-4 w-4 transition-transform",

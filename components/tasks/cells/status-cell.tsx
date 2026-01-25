@@ -33,11 +33,11 @@ export function StatusCell({ taskId, status }: StatusCellProps) {
 
   return (
     <Select value={status} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-full border-none shadow-none bg-transparent hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:border-transparent">
+      <SelectTrigger className="h-8 w-full border-none shadow-none bg-transparent hover:bg-muted/30 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:border-transparent">
         <SelectValue>
           <Badge
             className={cn(
-              "rounded-full px-2.5 py-0.5 text-xs font-medium border-0",
+              "rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide border-0 shadow-none",
               STATUS_CONFIG[status].bg,
               STATUS_CONFIG[status].text
             )}
@@ -51,7 +51,7 @@ export function StatusCell({ taskId, status }: StatusCellProps) {
           <SelectItem key={value} value={value}>
             <Badge
               className={cn(
-                "rounded-full px-2.5 py-0.5 text-xs font-medium border-0",
+                "rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide border-0 shadow-none",
                 config.bg,
                 config.text
               )}

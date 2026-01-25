@@ -83,7 +83,7 @@ export function TaskThumbnail({ taskId, imageStorageId }: TaskThumbnailProps) {
   return (
     <div
       className={cn(
-        "relative h-8 w-8 rounded border bg-muted/50 flex items-center justify-center overflow-hidden group/thumbnail",
+        "relative h-8 w-8 rounded-md border border-border/30 bg-muted/50 flex items-center justify-center overflow-hidden group/thumbnail",
         isUploading && "animate-pulse"
       )}
       onPaste={handlePaste}

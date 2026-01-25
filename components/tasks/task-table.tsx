@@ -154,10 +154,10 @@ export function TaskTable({
 
   // Flat list view
   return (
-    <div className="bg-background">
+    <div className="bg-background rounded-lg border border-border/30 shadow-[var(--task-container-shadow)] overflow-hidden">
       {/* Header row */}
       <div
-        className="grid items-center border-b text-sm font-medium text-muted-foreground"
+        className="grid items-center border-b border-border/30 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
         style={{ gridTemplateColumns: TASK_GRID_COLUMNS }}
       >
         <div className="flex items-center justify-center py-3">

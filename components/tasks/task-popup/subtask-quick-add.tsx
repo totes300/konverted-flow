@@ -69,7 +69,7 @@ export function SubtaskQuickAdd({ parentTaskId }: SubtaskQuickAddProps) {
 
   // Inline row that's always visible
   return (
-    <div className="grid grid-cols-[1fr_minmax(100px,140px)_minmax(80px,100px)_minmax(80px,120px)_40px] items-center px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors">
+    <div className="grid grid-cols-[1fr_minmax(100px,140px)_minmax(80px,100px)_minmax(80px,120px)_40px] items-center px-4 py-3 hover:bg-muted/20 transition-colors">
       {/* Name cell */}
       <div className="flex items-center gap-2 min-w-0">
         <IconCirclePlus className="h-4 w-4 text-muted-foreground shrink-0" />

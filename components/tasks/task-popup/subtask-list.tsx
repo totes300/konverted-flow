@@ -41,7 +41,7 @@ export function SubtaskList({ parentTaskId }: SubtaskListProps) {
             </div>
           </div>
         ) : (
-          <div className="bg-background overflow-hidden flex flex-col h-full">
+          <div className="bg-background rounded-lg border border-border/30 shadow-[var(--task-container-shadow)] overflow-hidden flex flex-col h-full">
             {subtaskCount > 0 && <SubtaskTableHeader />}
             <div className="flex-1 overflow-y-auto">
               {subtasks.map((subtask) => (

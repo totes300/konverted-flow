@@ -67,7 +67,7 @@ export function TaskQuickAdd({ defaultClientId, defaultStatus }: TaskQuickAddPro
       <button
         type="button"
         onClick={handleClick}
-        className="flex items-center gap-2 px-4 py-2 w-full text-left text-muted-foreground hover:bg-muted/50 transition-colors rounded-md"
+        className="flex items-center gap-2 px-4 py-2 w-full text-left text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/20 transition-colors rounded-md"
       >
         <IconPlus className="h-4 w-4" />
         <span className="text-sm">New task</span>

@@ -98,7 +98,7 @@ export function SubtaskRow({ subtask }: SubtaskRowProps) {
   };
 
   return (
-    <div className="grid grid-cols-[1fr_140px_135px_145px_40px] items-center border-b hover:bg-muted/30 transition-colors group">
+    <div className="group/row grid grid-cols-[1fr_140px_135px_145px_40px] items-center border-b border-border/40 hover:bg-muted/30 transition-colors duration-100">
       {/* Name cell */}
       <div className="flex items-center gap-3 min-w-0 py-2 px-4">
         <Checkbox
@@ -155,7 +155,7 @@ export function SubtaskRow({ subtask }: SubtaskRowProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-7 w-7 text-muted-foreground/70 hover:text-foreground hover:bg-muted/50 opacity-0 group-hover/row:opacity-100 transition-opacity"
               aria-label="Subtask actions"
             >
               <IconDotsVertical className="h-4 w-4" />

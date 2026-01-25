@@ -93,11 +93,11 @@ export function TitleCell({
 
   return (
     <div
-      className="flex items-center gap-2 cursor-pointer px-1 py-1 hover:bg-muted/50 rounded"
+      className="flex items-center gap-2 cursor-pointer px-1 py-1 hover:bg-muted/30 rounded"
       onDoubleClick={handleDoubleClick}
       onClick={onClick}
     >
-      <span className="font-medium truncate">{title}</span>
+      <span className="font-normal text-[15px] text-foreground/90 truncate">{title}</span>
 
       {hasSubtasks && (
         <Badge variant="secondary" className="h-5 px-1.5 text-xs shrink-0">

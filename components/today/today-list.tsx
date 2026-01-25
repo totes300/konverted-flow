@@ -73,7 +73,7 @@ function TodayGroup({
       className="rounded-lg overflow-hidden"
     >
       <CollapsibleTrigger className="w-full">
-        <div className="flex items-center gap-2 px-4 py-2 bg-muted/20 hover:bg-muted/40 transition-colors">
+        <div className="flex items-center gap-2 px-4 py-2 bg-muted/10 hover:bg-muted/20 transition-colors">
           <IconChevronRight
             className={cn(
               "h-4 w-4 transition-transform shrink-0",
@@ -340,10 +340,10 @@ export function TodayList({ assigneeId, clientId, groupBy = "none" }: TodayListP
         items={localItems.map((item) => item._id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="bg-background">
+        <div className="bg-background rounded-lg border border-border/30 shadow-[var(--task-container-shadow)] overflow-hidden">
           {/* Header row - same style as task-table.tsx */}
           <div
-            className="grid items-center border-b text-sm font-medium text-muted-foreground"
+            className="grid items-center border-b border-border/30 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
             style={{ gridTemplateColumns: TODAY_GRID_COLUMNS }}
           >
             <div className="py-3"></div>
