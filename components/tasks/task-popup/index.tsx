@@ -4,11 +4,11 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TaskPopupHeader } from "./task-popup-header";
@@ -38,36 +38,34 @@ export function TaskPopup({ taskId, open, onOpenChange }: TaskPopupProps) {
   const isLoading = taskId !== null && task === undefined;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
         showCloseButton={false}
-        className="w-full sm:max-w-4xl p-0 gap-0 flex flex-col"
+        fullScreen
+        className="p-0 gap-0 flex flex-col overflow-hidden"
       >
         <VisuallyHidden.Root>
-          <SheetTitle>{task?.title ?? "Task Details"}</SheetTitle>
-          <SheetDescription>View and edit task details</SheetDescription>
+          <DialogTitle>{task?.title ?? "Task Details"}</DialogTitle>
+          <DialogDescription>View and edit task details</DialogDescription>
         </VisuallyHidden.Root>
+
         {isLoading ? (
           <TaskPopupSkeleton />
         ) : task ? (
-          <>
-            <TaskPopupHeader
-              title={task.title}
-              onClose={() => onOpenChange(false)}
-            />
+          <div className="flex flex-col h-full overflow-hidden">
+            <TaskPopupHeader onClose={() => onOpenChange(false)} />
 
             {/* Desktop layout: side-by-side */}
             <div className="hidden md:flex flex-1 min-h-0 overflow-hidden">
-              {/* Left Panel - Details (60%) */}
-              <div className="flex-[3] overflow-y-auto border-r">
+              {/* Left Panel - Details (~70%) */}
+              <div className="flex-[7] overflow-y-auto">
                 <TaskPopupLeft
                   task={task}
                   clientName={clientName}
                 />
               </div>
-              {/* Right Panel - Activity (40%) */}
-              <div className="flex-[2] overflow-y-auto bg-muted/30">
+              {/* Right Panel - Activity (~30%) */}
+              <div className="flex-[3] overflow-y-auto bg-muted/10 border-l border-muted/30">
                 <TaskPopupRight taskId={task._id} />
               </div>
             </div>
@@ -96,43 +94,54 @@ export function TaskPopup({ taskId, open, onOpenChange }: TaskPopupProps) {
                 </TabsContent>
                 <TabsContent
                   value="activity"
-                  className="flex-1 overflow-hidden mt-0 bg-muted/30 data-[state=inactive]:hidden"
+                  className="flex-1 overflow-hidden mt-0 bg-muted/10 data-[state=inactive]:hidden"
                 >
                   <TaskPopupRight taskId={task._id} />
                 </TabsContent>
               </Tabs>
             </div>
-          </>
+          </div>
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             Task not found
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function TaskPopupSkeleton() {
   return (
     <div className="flex flex-col h-full" role="status" aria-label="Loading task">
-      <div className="flex items-center justify-between p-4 border-b">
-        <Skeleton className="h-6 w-48" />
+      {/* Close button placeholder */}
+      <div className="absolute top-4 right-4 z-10">
         <Skeleton className="h-8 w-8 rounded" />
       </div>
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
-        <div className="flex-1 md:flex-[3] p-6 space-y-6 md:border-r">
-          <Skeleton className="h-8 w-full" />
-          <div className="flex gap-4 flex-wrap">
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-8 w-32" />
+        <div className="flex-1 md:flex-[7] p-6 space-y-6">
+          {/* Title with checkbox */}
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-8 w-96" />
           </div>
-          <Skeleton className="h-24 w-full" />
+          {/* Attribute grid */}
+          <div className="grid grid-cols-2 gap-y-4 gap-x-12 py-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-32 w-full" />
+          {/* Subtasks */}
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </div>
         </div>
-        <div className="hidden md:block md:flex-[2] p-4 bg-muted/30">
-          <Skeleton className="h-4 w-24 mb-4" />
-          <Skeleton className="h-20 w-full" />
+        <div className="hidden md:block md:flex-[3] p-4 bg-muted/10 border-l border-muted/30">
+          <Skeleton className="h-5 w-24 mb-4" />
+          <Skeleton className="h-24 w-full" />
         </div>
       </div>
     </div>

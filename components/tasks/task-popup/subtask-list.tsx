@@ -5,8 +5,9 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { SubtaskRow } from "./subtask-row";
 import { SubtaskQuickAdd } from "./subtask-quick-add";
+import { SubtaskProgress } from "./subtask-progress";
+import { SubtaskTableHeader } from "./subtask-table-header";
 import { IconSubtask } from "@tabler/icons-react";
-import { Badge } from "@/components/ui/badge";
 
 interface SubtaskListProps {
   parentTaskId: Id<"tasks">;
@@ -20,39 +21,37 @@ export function SubtaskList({ parentTaskId }: SubtaskListProps) {
   const completedCount = subtasks?.filter((s) => s.status === "done").length || 0;
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <IconSubtask className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Subtasks</span>
-        {subtaskCount > 0 && (
-          <Badge variant="secondary" className="text-xs">
-            {completedCount}/{subtaskCount}
-          </Badge>
-        )}
+      <div className="flex items-center gap-3 mb-4">
+        <IconSubtask className="h-5 w-5 text-muted-foreground" />
+        <span className="text-base font-medium">Subtasks</span>
+        <SubtaskProgress completed={completedCount} total={subtaskCount} />
       </div>
 
-      {/* Subtask list */}
-      {isLoading ? (
-        <div className="space-y-2" role="status" aria-label="Loading subtasks">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-10 bg-muted/50 rounded animate-pulse" />
-          ))}
-        </div>
-      ) : subtaskCount === 0 ? (
-        <div className="py-4 text-center text-sm text-muted-foreground">
-          No subtasks yet
-        </div>
-      ) : (
-        <div className="space-y-1 rounded-md border bg-background">
-          {subtasks.map((subtask) => (
-            <SubtaskRow key={subtask._id} subtask={subtask} />
-          ))}
-        </div>
-      )}
-
-      {/* Quick add */}
-      <SubtaskQuickAdd parentTaskId={parentTaskId} />
+      {/* Subtask table */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {isLoading ? (
+          <div className="bg-background overflow-hidden h-full" role="status" aria-label="Loading subtasks">
+            <SubtaskTableHeader />
+            <div>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-12 bg-muted/20 animate-pulse border-b" />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-background overflow-hidden flex flex-col h-full">
+            {subtaskCount > 0 && <SubtaskTableHeader />}
+            <div className="flex-1 overflow-y-auto">
+              {subtasks.map((subtask) => (
+                <SubtaskRow key={subtask._id} subtask={subtask} />
+              ))}
+              <SubtaskQuickAdd parentTaskId={parentTaskId} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

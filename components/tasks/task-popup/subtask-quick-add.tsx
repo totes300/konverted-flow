@@ -5,8 +5,9 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { IconPlus } from "@tabler/icons-react";
+import { IconCirclePlus } from "@tabler/icons-react";
 
 interface SubtaskQuickAddProps {
   parentTaskId: Id<"tasks">;
@@ -52,52 +53,77 @@ export function SubtaskQuickAdd({ parentTaskId }: SubtaskQuickAddProps) {
     }
   };
 
+  const handleCancel = () => {
+    setTitle("");
+    setIsAdding(false);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleSubmit();
     } else if (e.key === "Escape") {
-      setTitle("");
-      setIsAdding(false);
+      handleCancel();
     }
   };
 
-  const handleBlur = () => {
-    // Submit on blur if there's content, otherwise close
-    if (title.trim().length > 0) {
-      handleSubmit();
-    } else {
-      setIsAdding(false);
-    }
-  };
-
-  if (!isAdding) {
-    return (
-      <button
-        onClick={() => setIsAdding(true)}
-        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 rounded-md transition-colors"
-        aria-label="Add new subtask"
-      >
-        <IconPlus className="h-4 w-4" />
-        Add subtask
-      </button>
-    );
-  }
-
+  // Inline row that's always visible
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-md border bg-background">
-      <IconPlus className="h-4 w-4 text-muted-foreground shrink-0" />
-      <Input
-        ref={inputRef}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
-        placeholder="Enter subtask title..."
-        className="h-7 border-0 bg-transparent focus-visible:ring-0 px-0"
-        disabled={isSubmitting}
-        aria-label="New subtask title"
-      />
+    <div className="grid grid-cols-[1fr_minmax(100px,140px)_minmax(80px,100px)_minmax(80px,120px)_40px] items-center px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors">
+      {/* Name cell */}
+      <div className="flex items-center gap-2 min-w-0">
+        <IconCirclePlus className="h-4 w-4 text-muted-foreground shrink-0" />
+        {isAdding ? (
+          <Input
+            ref={inputRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter subtask title..."
+            className="h-7 flex-1 px-1 border-0 bg-transparent focus-visible:ring-1"
+            disabled={isSubmitting}
+            aria-label="New subtask title"
+          />
+        ) : (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
+            aria-label="Add new subtask"
+          >
+            Add subtask...
+          </button>
+        )}
+      </div>
+
+      {/* Empty cells to match grid */}
+      <div />
+      <div />
+      <div />
+
+      {/* Actions cell */}
+      <div className="flex items-center justify-end gap-1">
+        {isAdding && title.trim().length > 0 && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              className="h-6 px-2 text-xs text-muted-foreground"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="h-6 px-2 text-xs"
+            >
+              Save
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

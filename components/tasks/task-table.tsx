@@ -2,16 +2,9 @@
 
 import { useMemo } from "react";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { TaskRow } from "./task-row";
+import { TaskGridRow, TASK_GRID_COLUMNS } from "./task-grid-row";
 import { TaskGroup } from "./task-group";
 import { TaskQuickAdd } from "./task-quick-add";
 import { IconPlus, IconChecklist } from "@tabler/icons-react";
@@ -152,59 +145,57 @@ export function TaskTable({
             onToggleSelect={onToggleSelect}
             unseenMap={unseenMap}
             focusedTaskId={focusedTaskId}
+            groupBy={groupBy}
           />
         ))}
-        <TaskQuickAdd
-          defaultClientId={defaultClientId}
-          defaultStatus={defaultStatus}
-        />
       </div>
     );
   }
 
   // Flat list view
   return (
-    <div className="rounded-md border bg-background">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[40px]">
-              {onSelectAll && (
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={() =>
-                    allSelected ? onSelectAll([]) : onSelectAll(allTaskIds)
-                  }
-                />
-              )}
-            </TableHead>
-            <TableHead className="w-[48px]"></TableHead>
-            <TableHead className="min-w-[200px]">Title</TableHead>
-            <TableHead className="w-[140px]">Client</TableHead>
-            <TableHead className="w-[100px]">Assignees</TableHead>
-            <TableHead className="w-[120px]">Status</TableHead>
-            <TableHead className="w-[90px]">Priority</TableHead>
-            <TableHead className="w-[120px]">Time</TableHead>
-            <TableHead className="w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tasks.map((task) => (
-            <TaskRow
-              key={task._id}
-              task={task}
-              clientName={
-                task.clientId ? clientMap.get(task.clientId) : undefined
+    <div className="bg-background">
+      {/* Header row */}
+      <div
+        className="grid items-center border-b text-sm font-medium text-muted-foreground"
+        style={{ gridTemplateColumns: TASK_GRID_COLUMNS }}
+      >
+        <div className="flex items-center justify-center py-3">
+          {onSelectAll && (
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() =>
+                allSelected ? onSelectAll([]) : onSelectAll(allTaskIds)
               }
-              onRowClick={onRowClick}
-              isSelected={selectedIds.includes(task._id)}
-              onToggleSelect={onToggleSelect}
-              hasUnseen={unseenMap[task._id] || false}
-              isFocused={focusedTaskId === task._id}
             />
-          ))}
-        </TableBody>
-      </Table>
+          )}
+        </div>
+        <div className="py-3"></div>
+        <div className="py-3">Title</div>
+        <div className="py-3">Client</div>
+        <div className="py-3">Assignees</div>
+        <div className="py-3">Status</div>
+        <div className="py-3">Priority</div>
+        <div className="py-3">Time</div>
+        <div className="py-3">Actions</div>
+      </div>
+      {/* Task rows */}
+      <div>
+        {tasks.map((task) => (
+          <TaskGridRow
+            key={task._id}
+            task={task}
+            clientName={
+              task.clientId ? clientMap.get(task.clientId) : undefined
+            }
+            onRowClick={onRowClick}
+            isSelected={selectedIds.includes(task._id)}
+            onToggleSelect={onToggleSelect}
+            hasUnseen={unseenMap[task._id] || false}
+            isFocused={focusedTaskId === task._id}
+          />
+        ))}
+      </div>
       <TaskQuickAdd
         defaultClientId={defaultClientId}
         defaultStatus={defaultStatus}

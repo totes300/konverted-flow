@@ -31,8 +31,12 @@ describe("Convex Schema", () => {
     expect(schema.tables.attachments).toBeDefined();
   });
 
-  it("should have exactly 7 tables", () => {
-    expect(Object.keys(schema.tables)).toHaveLength(7);
+  it("should define reports table", () => {
+    expect(schema.tables.reports).toBeDefined();
+  });
+
+  it("should have exactly 8 tables", () => {
+    expect(Object.keys(schema.tables)).toHaveLength(8);
   });
 
   it("should have users table defined", () => {

@@ -6,6 +6,8 @@ import {
   IconUsers,
   IconShield,
   IconInnerShadowTop,
+  IconClockHour4,
+  IconFileReport,
 } from "@tabler/icons-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -38,9 +40,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconSun,
     },
     {
+      title: "Timesheet",
+      url: "/timesheet",
+      icon: IconClockHour4,
+    },
+    {
       title: "Clients",
       url: "/clients",
       icon: IconUsers,
+    },
+    {
+      title: "Reports",
+      url: "/reports",
+      icon: IconFileReport,
     },
   ];
 

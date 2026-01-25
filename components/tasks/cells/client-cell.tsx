@@ -46,7 +46,7 @@ export function ClientCell({ taskId, clientId, clientName, isSubtask }: ClientCe
 
   return (
     <Select value={clientId ?? "none"} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-[140px] border-0 bg-transparent hover:bg-muted focus:ring-0 focus:ring-offset-0">
+      <SelectTrigger className="h-8 w-full border-none shadow-none bg-transparent hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:border-transparent">
         <SelectValue placeholder="No client">
           <div className="flex items-center gap-2 truncate">
             <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />

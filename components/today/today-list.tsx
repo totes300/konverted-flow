@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
-import { TodayItem } from "./today-item";
+import { TodayGridRow, TODAY_GRID_COLUMNS } from "./today-grid-row";
 import {
   DndContext,
   closestCenter,
@@ -19,20 +19,99 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IconSun } from "@tabler/icons-react";
+import { Badge } from "@/components/ui/badge";
+import { IconSun, IconChevronRight } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
+import { TodayGroupByOption } from "@/hooks/use-today-filters";
+import { PRIORITY_CONFIG, TaskPriority } from "@/lib/task-constants";
+import { formatDuration } from "@/lib/time-parser";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 interface TodayListProps {
   assigneeId?: Id<"users">;
+  clientId?: Id<"clients">;
+  groupBy?: TodayGroupByOption;
 }
 
 type TodayTask = Doc<"tasks"> & { parentTask?: Doc<"tasks"> };
 
-export function TodayList({ assigneeId }: TodayListProps) {
+// Group header component
+function TodayGroup({
+  groupName,
+  tasks,
+  clientMap,
+  onTaskClick,
+  defaultOpen = true,
+  completedCount,
+  totalCount,
+  totalTime,
+}: {
+  groupName: string;
+  tasks: TodayTask[];
+  clientMap: Map<Id<"clients">, string>;
+  onTaskClick: (taskId: Id<"tasks">) => void;
+  defaultOpen?: boolean;
+  completedCount: number;
+  totalCount: number;
+  totalTime: number;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="rounded-lg overflow-hidden"
+    >
+      <CollapsibleTrigger className="w-full">
+        <div className="flex items-center gap-2 px-4 py-2 bg-muted/20 hover:bg-muted/40 transition-colors">
+          <IconChevronRight
+            className={cn(
+              "h-4 w-4 transition-transform shrink-0",
+              isOpen && "rotate-90"
+            )}
+          />
+          <span className="font-medium">{groupName || "Unassigned"}</span>
+
+          {/* Per-group stats */}
+          <span className="text-sm text-muted-foreground ml-2">
+            {completedCount}/{totalCount} done
+            {totalTime > 0 && ` • ${formatDuration(totalTime)}`}
+          </span>
+
+          <Badge variant="secondary" className="ml-auto">
+            {tasks.length}
+          </Badge>
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div>
+          {tasks.map((task) => (
+            <TodayGridRow
+              key={task._id}
+              task={task}
+              clientName={
+                task.clientId ? clientMap.get(task.clientId) : undefined
+              }
+              onTaskClick={onTaskClick}
+            />
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+export function TodayList({ assigneeId, clientId, groupBy = "none" }: TodayListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -43,12 +122,16 @@ export function TodayList({ assigneeId }: TodayListProps) {
   // Local state for optimistic reordering
   const [localItems, setLocalItems] = useState<TodayTask[]>([]);
 
-  // Sync local state with server state
+  // Sync local state with server state and apply client filter
   useEffect(() => {
     if (todayItems) {
-      setLocalItems(todayItems);
+      let filtered = todayItems;
+      if (clientId) {
+        filtered = todayItems.filter((task) => task.clientId === clientId);
+      }
+      setLocalItems(filtered);
     }
-  }, [todayItems]);
+  }, [todayItems, clientId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -59,6 +142,9 @@ export function TodayList({ assigneeId }: TodayListProps) {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+
+    // Disable drag when grouped
+    if (groupBy !== "none") return;
 
     if (over && active.id !== over.id) {
       const oldIndex = localItems.findIndex((item) => item._id === active.id);
@@ -75,7 +161,10 @@ export function TodayList({ assigneeId }: TodayListProps) {
         });
       } catch {
         // Revert on error
-        setLocalItems(todayItems || []);
+        const filtered = clientId
+          ? todayItems?.filter((task) => task.clientId === clientId) || []
+          : todayItems || [];
+        setLocalItems(filtered);
         toast.error("Failed to reorder tasks");
       }
     }
@@ -89,14 +178,114 @@ export function TodayList({ assigneeId }: TodayListProps) {
   };
 
   // Build client lookup map
-  const clientMap = new Map(clients?.map((c) => [c._id, c.name]) || []);
+  const clientMap = useMemo(
+    () => new Map(clients?.map((c) => [c._id, c.name]) || []),
+    [clients]
+  );
+
+  // Group tasks based on groupBy option
+  const groupedTasks = useMemo(() => {
+    if (groupBy === "none") {
+      return null;
+    }
+
+    const groups = new Map<string, TodayTask[]>();
+
+    for (const task of localItems) {
+      let groupKey: string;
+      let groupLabel: string;
+
+      switch (groupBy) {
+        case "client":
+          groupKey = task.clientId || "none";
+          groupLabel = task.clientId ? clientMap.get(task.clientId) || "Unknown Client" : "No Client";
+          break;
+        case "priority":
+          groupKey = task.priority;
+          groupLabel = PRIORITY_CONFIG[task.priority as TaskPriority]?.label || task.priority;
+          break;
+        case "parent":
+          groupKey = task.parentTaskId || "none";
+          groupLabel = task.parentTask?.title || "No Parent Task";
+          break;
+        default:
+          groupKey = "all";
+          groupLabel = "All Tasks";
+      }
+
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, []);
+      }
+      groups.get(groupKey)!.push(task);
+    }
+
+    // Helper to calculate stats for a group (using TODAY's time, not all-time)
+    const calcStats = (tasks: TodayTask[]) => ({
+      completedCount: tasks.filter(t => t.status === "done").length,
+      totalCount: tasks.length,
+      totalTime: tasks.reduce((sum, t) => sum + ((t as any).todayTimeSeconds || 0), 0),
+    });
+
+    // Convert to array and sort
+    const result: {
+      key: string;
+      label: string;
+      tasks: TodayTask[];
+      completedCount: number;
+      totalCount: number;
+      totalTime: number;
+    }[] = [];
+
+    if (groupBy === "priority") {
+      // Sort by priority order: high, medium, low
+      const priorityOrder = ["high", "medium", "low"];
+      for (const priority of priorityOrder) {
+        const tasks = groups.get(priority);
+        if (tasks && tasks.length > 0) {
+          const stats = calcStats(tasks);
+          result.push({
+            key: priority,
+            label: PRIORITY_CONFIG[priority as TaskPriority]?.label || priority,
+            tasks,
+            ...stats,
+          });
+        }
+      }
+    } else {
+      // Sort alphabetically, but put "none" at the end
+      const entries = Array.from(groups.entries());
+      entries.sort((a, b) => {
+        if (a[0] === "none") return 1;
+        if (b[0] === "none") return -1;
+        return a[0].localeCompare(b[0]);
+      });
+
+      for (const [key, tasks] of entries) {
+        let label: string;
+        switch (groupBy) {
+          case "client":
+            label = key === "none" ? "No Client" : clientMap.get(key as Id<"clients">) || "Unknown Client";
+            break;
+          case "parent":
+            label = key === "none" ? "No Parent Task" : tasks[0]?.parentTask?.title || "Unknown";
+            break;
+          default:
+            label = key;
+        }
+        const stats = calcStats(tasks);
+        result.push({ key, label, tasks, ...stats });
+      }
+    }
+
+    return result;
+  }, [localItems, groupBy, clientMap]);
 
   // Loading state
   if (todayItems === undefined) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-0">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-lg" />
+          <Skeleton key={i} className="h-12 w-full border-b" />
         ))}
       </div>
     );
@@ -120,6 +309,27 @@ export function TodayList({ assigneeId }: TodayListProps) {
     );
   }
 
+  // Grouped view
+  if (groupBy !== "none" && groupedTasks) {
+    return (
+      <div className="bg-background space-y-2">
+        {groupedTasks.map((group) => (
+          <TodayGroup
+            key={group.key}
+            groupName={group.label}
+            tasks={group.tasks}
+            clientMap={clientMap}
+            onTaskClick={handleTaskClick}
+            completedCount={group.completedCount}
+            totalCount={group.totalCount}
+            totalTime={group.totalTime}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Flat list with drag-and-drop
   return (
     <DndContext
       sensors={sensors}
@@ -130,15 +340,32 @@ export function TodayList({ assigneeId }: TodayListProps) {
         items={localItems.map((item) => item._id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-2">
-          {localItems.map((task) => (
-            <TodayItem
-              key={task._id}
-              task={task}
-              clientName={task.clientId ? clientMap.get(task.clientId) : undefined}
-              onTaskClick={handleTaskClick}
-            />
-          ))}
+        <div className="bg-background">
+          {/* Header row - same style as task-table.tsx */}
+          <div
+            className="grid items-center border-b text-sm font-medium text-muted-foreground"
+            style={{ gridTemplateColumns: TODAY_GRID_COLUMNS }}
+          >
+            <div className="py-3"></div>
+            <div className="py-3"></div>
+            <div className="py-3">Title</div>
+            <div className="py-3">Assignees</div>
+            <div className="py-3">Status</div>
+            <div className="py-3">Priority</div>
+            <div className="py-3">Time</div>
+          </div>
+
+          {/* Task rows - flat list */}
+          <div>
+            {localItems.map((task) => (
+              <TodayGridRow
+                key={task._id}
+                task={task}
+                clientName={task.clientId ? clientMap.get(task.clientId) : undefined}
+                onTaskClick={handleTaskClick}
+              />
+            ))}
+          </div>
         </div>
       </SortableContext>
     </DndContext>

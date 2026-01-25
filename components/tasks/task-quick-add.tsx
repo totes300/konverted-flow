@@ -15,6 +15,7 @@ interface TaskQuickAddProps {
 
 export function TaskQuickAdd({ defaultClientId, defaultStatus }: TaskQuickAddProps) {
   const [title, setTitle] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const createTask = useMutation(api.tasks.create);
@@ -46,12 +47,36 @@ export function TaskQuickAdd({ defaultClientId, defaultStatus }: TaskQuickAddPro
       handleSubmit();
     } else if (e.key === "Escape") {
       setTitle("");
-      inputRef.current?.blur();
+      setIsEditing(false);
     }
   };
 
+  const handleBlur = () => {
+    if (!title.trim()) {
+      setIsEditing(false);
+    }
+  };
+
+  const handleClick = () => {
+    setIsEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  if (!isEditing) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        className="flex items-center gap-2 px-4 py-2 w-full text-left text-muted-foreground hover:bg-muted/50 transition-colors rounded-md"
+      >
+        <IconPlus className="h-4 w-4" />
+        <span className="text-sm">New task</span>
+      </button>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 border-t px-4 py-2 bg-muted/30">
+    <div className="flex items-center gap-2 px-4 py-1">
       <IconPlus className="h-4 w-4 text-muted-foreground" />
       <Input
         ref={inputRef}
@@ -59,8 +84,9 @@ export function TaskQuickAdd({ defaultClientId, defaultStatus }: TaskQuickAddPro
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Add a new task..."
-        className="border-0 bg-transparent h-8 px-1 focus-visible:ring-0 placeholder:text-muted-foreground/60"
+        onBlur={handleBlur}
+        placeholder="Task name..."
+        className="border-0 bg-transparent h-8 px-1 focus-visible:ring-0 placeholder:text-muted-foreground/50"
         disabled={isSubmitting}
       />
     </div>

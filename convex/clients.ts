@@ -2,6 +2,12 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getUserOrgId } from "./lib/auth";
 import { ConvexError } from "convex/values";
+import { Currency, optionalCurrencyValidator } from "./types";
+
+// Re-export for backward compatibility
+export type { Currency };
+
+const currencyValidator = optionalCurrencyValidator;
 
 /**
  * List all non-archived clients for the current user's organization.
@@ -53,6 +59,7 @@ export const create = mutation({
     name: v.string(),
     email: v.optional(v.string()),
     defaultHourlyRate: v.optional(v.number()),
+    currency: currencyValidator,
   },
   handler: async (ctx, args) => {
     const orgId = await getUserOrgId(ctx);
@@ -84,6 +91,7 @@ export const create = mutation({
       name: trimmedName,
       email: args.email?.trim() || undefined,
       defaultHourlyRate: args.defaultHourlyRate,
+      currency: args.currency,
       isArchived: false,
       createdAt: Date.now(),
     });
@@ -102,6 +110,7 @@ export const update = mutation({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     defaultHourlyRate: v.optional(v.number()),
+    currency: currencyValidator,
   },
   handler: async (ctx, args) => {
     const orgId = await getUserOrgId(ctx);
@@ -117,6 +126,7 @@ export const update = mutation({
       name?: string;
       email?: string;
       defaultHourlyRate?: number;
+      currency?: Currency;
     } = {};
 
     if (args.name !== undefined) {
@@ -147,6 +157,10 @@ export const update = mutation({
         throw new ConvexError("Hourly rate cannot be negative");
       }
       updates.defaultHourlyRate = args.defaultHourlyRate;
+    }
+
+    if (args.currency !== undefined) {
+      updates.currency = args.currency;
     }
 
     if (Object.keys(updates).length > 0) {

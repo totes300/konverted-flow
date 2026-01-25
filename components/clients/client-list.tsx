@@ -33,12 +33,15 @@ import { IconDotsVertical, IconPencil, IconArchive, IconPlus, IconLoader2 } from
 import { ClientDialog } from "./client-dialog";
 import { toast } from "sonner";
 
+import { Currency } from "@/lib/report-utils";
+
 // Types
 interface Client {
   _id: Id<"clients">;
   name: string;
   email?: string;
   defaultHourlyRate?: number;
+  currency?: Currency;
 }
 
 interface ClientListProps {

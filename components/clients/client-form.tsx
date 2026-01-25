@@ -15,7 +15,15 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { IconLoader2 } from "@tabler/icons-react";
+import { getCurrencyOptions, Currency } from "@/lib/report-utils";
 
 // Constants
 const MAX_NAME_LENGTH = 200;
@@ -38,6 +46,7 @@ const clientFormSchema = z.object({
       (val) => val === "" || (!isNaN(parseFloat(val)) && parseFloat(val) >= 0),
       "Please enter a valid non-negative number"
     ),
+  currency: z.enum(["USD", "EUR", "HUF"]).optional(),
 });
 
 type ClientFormInput = z.infer<typeof clientFormSchema>;
@@ -47,6 +56,7 @@ export interface ClientFormValues {
   name: string;
   email?: string;
   defaultHourlyRate?: number;
+  currency?: Currency;
 }
 
 interface ClientFormProps {
@@ -54,6 +64,7 @@ interface ClientFormProps {
     name: string;
     email?: string;
     defaultHourlyRate?: number;
+    currency?: Currency;
   };
   onSubmit: (values: ClientFormValues) => Promise<void>;
   isSubmitting?: boolean;
@@ -70,6 +81,7 @@ export function ClientForm({
       name: defaultValues?.name ?? "",
       email: defaultValues?.email ?? "",
       defaultHourlyRate: defaultValues?.defaultHourlyRate?.toString() ?? "",
+      currency: defaultValues?.currency,
     },
   });
 
@@ -79,6 +91,7 @@ export function ClientForm({
       name: defaultValues?.name ?? "",
       email: defaultValues?.email ?? "",
       defaultHourlyRate: defaultValues?.defaultHourlyRate?.toString() ?? "",
+      currency: defaultValues?.currency,
     });
   }, [defaultValues, form]);
 
@@ -89,10 +102,13 @@ export function ClientForm({
       defaultHourlyRate: values.defaultHourlyRate
         ? parseFloat(values.defaultHourlyRate)
         : undefined,
+      currency: values.currency,
     };
 
     await onSubmit(submitValues);
   };
+
+  const currencyOptions = getCurrencyOptions();
 
   return (
     <Form {...form}>
@@ -159,7 +175,38 @@ export function ClientForm({
                 />
               </FormControl>
               <FormDescription>
-                Default rate for time tracking (USD)
+                Default rate for time tracking
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="currency"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {currencyOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Currency for billing and reports
               </FormDescription>
               <FormMessage />
             </FormItem>

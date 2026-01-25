@@ -22,6 +22,7 @@ This document breaks down the implementation into testable milestones with concr
 | M4: Task Popup & Subtasks | ✅ Complete | 2026-01-24 |
 | M5: Time Tracking | ✅ Complete | 2026-01-24 |
 | M6: Today View | ✅ Complete | 2026-01-25 |
+
 | M7: Activity & Comments | Not started | - |
 | M8: Admin Review Page | Not started | - |
 
@@ -1012,74 +1013,32 @@ function useTimer(): {
 
 ### Task 5.4: Time Pill Component
 
-**Description**: Build the time tracking cell for task rows with popover for quick time add and entry management.
+**Description**: Build the time tracking cell for task rows.
 
-**Files created**:
-- `components/time/time-pill.tsx` - Main pill with play/stop button + popover trigger
-- `components/time/time-popover.tsx` - Popover content with Quick Add and Time Entries
-- `components/time/time-entry-list.tsx` - List of time entries with expand/collapse
-- `components/time/time-entry-row.tsx` - Individual entry row with actions
-- `components/time/time-entry-actions.tsx` - Edit/Delete dropdown menu
-- `components/time/time-edit-dialog.tsx` - Dialog for editing entry duration/date
-
-**UI Design**:
-```
-┌─────────────────────────────────────────────┐
-│  Total Time                          6h 52m │
-├─────────────────────────────────────────────┤
-│  QUICK ADD                                  │
-│  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐   │
-│  │ 15m │ │ 30m │ │ 45m │ │ 1h  │ │ 2h  │   │
-│  └─────┘ └─────┘ └─────┘ └─────┘ └─────┘   │
-│  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐           │
-│  │ 3h  │ │ 4h  │ │ 6h  │ │ 8h  │           │
-│  └─────┘ └─────┘ └─────┘ └─────┘           │
-│  ┌─────────────────────────────┐ ┌───────┐ │
-│  │ e.g. 1h 30m                 │ │  Add  │ │
-│  └─────────────────────────────┘ └───────┘ │
-├─────────────────────────────────────────────┤
-│  ▼ TIME ENTRIES (collapsible)               │
-│  ┌─────────────────────────────────────────┐│
-│  │ 01:30:00  Jan 25 · 8:16-9:46 AM · John  ││
-│  │ 02:15:00  Jan 24 · 2:00-4:15 PM · Jane  ││
-│  │ 00:45:00  Jan 24 · manual entry · John  ││
-│  └─────────────────────────────────────────┘│
-│         Show all entries (X more)           │
-└─────────────────────────────────────────────┘
-```
-
-**Time Pill Design**:
-- Green circular play/stop button (emerald-500)
-- Time display with dropdown chevron
-- Running state: emerald text + pulse animation
+**Files to create**:
+- `components/time/time-pill.tsx` - Main component
+- `components/time/time-presets.tsx` - Quick time add menu
 
 **Acceptance Criteria**:
 - [x] Shows total logged time for task (formatted: "2h 30m" or "45m")
-- [x] Play button starts timer, Stop button stops timer
-- [x] Visual indicator when this task's timer is running (green pulse)
-- [x] Click on time opens popover with Quick Add at top (one-click adding)
-- [x] Preset buttons: 15m, 30m, 45m, 1h, 2h, 3h, 4h, 6h, 8h
-- [x] Custom input with inline Add button
-- [x] Time Entries section is collapsible (collapsed by default)
-- [x] Shows last 3 entries, "Show all" button for more
-- [x] Entry rows show: duration (HH:MM:SS), date, time range, user name
-- [x] Entry actions: Edit (dialog), Delete
-- [x] Edit dialog allows changing duration and date
-- [x] Time displays "-" for tasks with no time logged
+- [x] Play button starts timer, Pause button stops timer
+- [x] Visual indicator when this task's timer is running
+- [x] Click on time opens popover with:
+  - Current total time
+  - Preset buttons: 15m, 30m, 45m, 1h, 2h, 3h, 4h, 6h, 8h
+  - Custom input for exact minutes
+- [x] Clicking preset adds time immediately (manual entry)
+- [x] Time displays 0 for tasks with no time logged
 
 **Tests**:
 | Test Type | Description | Expected Result |
 |-----------|-------------|-----------------|
 | Manual | Click play | Timer starts for this task |
-| Manual | Click 30m preset | 30 minutes added immediately |
-| Manual | Enter "1h 30m", click Add | 1.5 hours added |
-| Manual | Expand Time Entries | Shows recent entries |
-| Manual | Click "..." on entry | Edit/Delete menu appears |
-| Manual | Edit entry duration | Dialog opens, saves correctly |
-| Manual | Delete entry | Entry removed, total updated |
-| Visual | Timer running | Green pill with pulse animation |
+| Manual | Click 30m preset | 30 minutes added to task total |
+| Manual | Enter custom 45, submit | 45 minutes added |
+| Visual | Timer running on this task | Pill shows running state |
 
-**Expected Outcome**: Time can be tracked from any task row with one-click presets and full entry management.
+**Expected Outcome**: Time can be tracked from any task row.
 
 ---
 
@@ -1628,12 +1587,6 @@ components/
 │   └── task-popup/    # Popup components
 ├── today/             # Today view components
 ├── time/              # Time tracking components
-│   ├── time-pill.tsx          # Main pill (play/stop + popover trigger)
-│   ├── time-popover.tsx       # Popover with Quick Add + entries
-│   ├── time-entry-list.tsx    # Entry list with expand/collapse
-│   ├── time-entry-row.tsx     # Single entry row
-│   ├── time-entry-actions.tsx # Edit/Delete dropdown
-│   └── time-edit-dialog.tsx   # Edit entry dialog
 ├── clients/           # Client management components
 └── review/            # Admin review components
 ```

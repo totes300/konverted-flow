@@ -3,34 +3,20 @@ import { mutation, query } from "./_generated/server";
 import { getUserOrgId, requireAuth } from "./lib/auth";
 import { ConvexError } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
+import { getDateInTimezone } from "./lib/timezone";
+import {
+  TaskStatus,
+  TaskPriority,
+  TaskCategory,
+  statusValidator,
+  priorityValidator,
+  optionalCategoryValidator,
+} from "./types";
 
-// Type definitions
-export type TaskStatus =
-  | "today"
-  | "next_up"
-  | "in_progress"
-  | "admin_review"
-  | "client_review"
-  | "stuck"
-  | "done";
+// Re-export types for backward compatibility
+export type { TaskStatus, TaskPriority, TaskCategory };
 
-export type TaskPriority = "low" | "medium" | "high";
-
-const statusValidator = v.union(
-  v.literal("today"),
-  v.literal("next_up"),
-  v.literal("in_progress"),
-  v.literal("admin_review"),
-  v.literal("client_review"),
-  v.literal("stuck"),
-  v.literal("done")
-);
-
-const priorityValidator = v.union(
-  v.literal("low"),
-  v.literal("medium"),
-  v.literal("high")
-);
+const categoryValidator = optionalCategoryValidator;
 
 /**
  * List main tasks (no parent) for the current organization.
@@ -160,6 +146,7 @@ export const create = mutation({
     parentTaskId: v.optional(v.id("tasks")),
     status: v.optional(statusValidator),
     priority: v.optional(priorityValidator),
+    category: categoryValidator,
   },
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
@@ -233,6 +220,7 @@ export const create = mutation({
       description: args.description?.trim() || undefined,
       status: args.status || "next_up",
       priority: args.priority || "medium",
+      category: args.category,
       clientId,
       assigneeIds,
       createdById: user._id,
@@ -271,6 +259,7 @@ export const update = mutation({
     description: v.optional(v.string()),
     status: v.optional(statusValidator),
     priority: v.optional(priorityValidator),
+    category: categoryValidator,
     clientId: v.optional(v.id("clients")),
     assigneeIds: v.optional(v.array(v.id("users"))),
   },
@@ -353,6 +342,11 @@ export const update = mutation({
     // Set priority
     if (args.priority !== undefined) {
       updates.priority = args.priority;
+    }
+
+    // Set category
+    if (args.category !== undefined) {
+      updates.category = args.category;
     }
 
     // Validate and set clientId (only for main tasks, not subtasks)
@@ -558,6 +552,15 @@ export const getTodayItems = query({
   handler: async (ctx, args) => {
     const orgId = await getUserOrgId(ctx);
 
+    // Get organization for timezone
+    const org = await ctx.db.get(orgId);
+    if (!org) {
+      return [];
+    }
+
+    // Get today's date in org timezone
+    const todayDate = getDateInTimezone(Date.now(), org.timezone);
+
     // Get all "today" tasks
     let tasks = await ctx.db
       .query("tasks")
@@ -574,8 +577,23 @@ export const getTodayItems = query({
       );
     }
 
-    // Fetch parent task info for subtasks
-    const tasksWithParent = await Promise.all(
+    // Fetch today's time entries for all tasks
+    const todayTimeEntries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_orgId_and_date", (q) =>
+        q.eq("orgId", orgId).eq("date", todayDate)
+      )
+      .collect();
+
+    // Build a map of taskId -> today's time in seconds
+    const todayTimeByTask = new Map<Id<"tasks">, number>();
+    for (const entry of todayTimeEntries) {
+      const current = todayTimeByTask.get(entry.taskId) || 0;
+      todayTimeByTask.set(entry.taskId, current + entry.durationSeconds);
+    }
+
+    // Fetch parent task info for subtasks and add today's time
+    const tasksWithParentAndTime = await Promise.all(
       tasks.map(async (task) => {
         let parentTask: Doc<"tasks"> | null = null;
         if (task.parentTaskId) {
@@ -584,6 +602,7 @@ export const getTodayItems = query({
         return {
           ...task,
           parentTask: parentTask || undefined,
+          todayTimeSeconds: todayTimeByTask.get(task._id) || 0,
         };
       })
     );
@@ -595,7 +614,7 @@ export const getTodayItems = query({
       low: 2,
     };
 
-    return tasksWithParent.sort((a, b) => {
+    return tasksWithParentAndTime.sort((a, b) => {
       // First sort by priority (high first)
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
       if (priorityDiff !== 0) return priorityDiff;

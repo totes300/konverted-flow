@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { IconX, IconTrash } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { STATUS_CONFIG, TaskStatus } from "@/lib/task-constants";
 
 interface BatchActionBarProps {
@@ -62,10 +64,15 @@ export function BatchActionBar({
         <SelectContent>
           {Object.entries(STATUS_CONFIG).map(([value, config]) => (
             <SelectItem key={value} value={value}>
-              <div className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${config.color}`} />
-                <span>{config.label}</span>
-              </div>
+              <Badge
+                className={cn(
+                  "rounded-full px-2.5 py-0.5 text-xs font-medium border-0",
+                  config.bg,
+                  config.text
+                )}
+              >
+                {config.label}
+              </Badge>
             </SelectItem>
           ))}
         </SelectContent>

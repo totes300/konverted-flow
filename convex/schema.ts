@@ -1,5 +1,12 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+  statusValidator,
+  priorityValidator,
+  optionalCategoryValidator,
+  optionalCurrencyValidator,
+  reportEntryValidator,
+} from "./types";
 
 export default defineSchema({
   organizations: defineTable({
@@ -17,7 +24,7 @@ export default defineSchema({
     role: v.union(v.literal("admin"), v.literal("member"), v.literal("viewer")),
     activeTimeEntryId: v.optional(v.id("timeEntries")),
     lastSeenAt: v.optional(v.number()),
-    isDeleted: v.optional(v.boolean()), // F1.3: Proper soft delete
+    isDeleted: v.optional(v.boolean()),
   })
     .index("by_clerkId", ["clerkId"])
     .index("by_orgId", ["orgId"])
@@ -28,6 +35,7 @@ export default defineSchema({
     name: v.string(),
     email: v.optional(v.string()),
     defaultHourlyRate: v.optional(v.number()),
+    currency: optionalCurrencyValidator,
     isArchived: v.boolean(),
     createdAt: v.number(),
   })
@@ -38,16 +46,9 @@ export default defineSchema({
     orgId: v.id("organizations"),
     title: v.string(),
     description: v.optional(v.string()),
-    status: v.union(
-      v.literal("today"),
-      v.literal("next_up"),
-      v.literal("in_progress"),
-      v.literal("admin_review"),
-      v.literal("client_review"),
-      v.literal("stuck"),
-      v.literal("done")
-    ),
-    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    status: statusValidator,
+    priority: priorityValidator,
+    category: optionalCategoryValidator,
     clientId: v.optional(v.id("clients")),
     assigneeIds: v.array(v.id("users")),
     createdById: v.id("users"),
@@ -55,7 +56,7 @@ export default defineSchema({
     sortOrder: v.number(),
     todaySortOrder: v.optional(v.number()),
     totalTimeSeconds: v.number(),
-    imageStorageId: v.optional(v.id("_storage")), // Task thumbnail image
+    imageStorageId: v.optional(v.id("_storage")),
     isDeleted: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -71,7 +72,7 @@ export default defineSchema({
     taskId: v.id("tasks"),
     userId: v.id("users"),
     date: v.string(), // YYYY-MM-DD in org timezone
-    startTime: v.optional(v.number()), // Unix timestamp
+    startTime: v.optional(v.number()),
     durationSeconds: v.number(),
     isRunning: v.boolean(),
     hourlyRate: v.optional(v.number()),
@@ -79,6 +80,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_taskId", ["taskId"])
+    .index("by_taskId_and_date", ["taskId", "date"]) // For efficient per-task date range queries
     .index("by_userId_and_isRunning", ["userId", "isRunning"])
     .index("by_userId_and_date", ["userId", "date"])
     .index("by_orgId_and_date", ["orgId", "date"]),
@@ -121,4 +123,26 @@ export default defineSchema({
     uploadedById: v.id("users"),
     createdAt: v.number(),
   }).index("by_activityEventId", ["activityEventId"]),
+
+  reports: defineTable({
+    orgId: v.id("organizations"),
+    clientId: v.id("clients"),
+    // Snapshot fields (optional for backward compat with old reports)
+    clientName: v.optional(v.string()), // Snapshot at creation
+    clientCurrency: optionalCurrencyValidator, // Snapshot
+    clientHourlyRate: v.optional(v.number()), // Snapshot
+    name: v.string(), // Auto-generated: "ClientName - Jan 2026"
+    startDate: v.string(), // YYYY-MM-DD
+    endDate: v.string(), // YYYY-MM-DD
+    entries: v.array(reportEntryValidator), // With task snapshots
+    // Support both old (totalHours) and new (totalSeconds) formats
+    totalHours: v.optional(v.number()), // Deprecated, for backward compat
+    totalSeconds: v.optional(v.number()), // New format
+    totalAmount: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_orgId", ["orgId"])
+    .index("by_clientId", ["clientId"])
+    .index("by_orgId_and_clientId", ["orgId", "clientId"]),
 });

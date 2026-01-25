@@ -13,9 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { IconFlagFilled, IconUser } from "@tabler/icons-react";
+import {
+  IconCalendarEvent,
+  IconFlagFilled,
+  IconUser,
+  IconUsers,
+  IconCategory,
+} from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 import { SubtaskList } from "./subtask-list";
 import { AssigneePopover } from "./assignee-popover";
 import {
@@ -24,6 +32,7 @@ import {
   STATUS_CONFIG,
   PRIORITY_CONFIG,
 } from "@/lib/task-constants";
+import { getCategoryOptions, TaskCategory } from "@/lib/report-utils";
 
 interface TaskPopupLeftProps {
   task: Doc<"tasks">;
@@ -42,8 +51,8 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
   const clients = useQuery(api.clients.list);
 
   const isSubtask = task.parentTaskId !== undefined;
+  const isDone = task.status === "done";
 
-  // Track mounted state to prevent updates after unmount
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -51,17 +60,14 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     };
   }, []);
 
-  // Sync title when task changes
   useEffect(() => {
     setTitle(task.title);
   }, [task.title]);
 
-  // Sync description when task changes
   useEffect(() => {
     setDescription(task.description || "");
   }, [task.description]);
 
-  // Auto-focus title input when editing
   useEffect(() => {
     if (isEditingTitle && titleInputRef.current) {
       titleInputRef.current.focus();
@@ -69,7 +75,6 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     }
   }, [isEditingTitle]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (descriptionTimeoutRef.current) {
@@ -77,6 +82,17 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
       }
     };
   }, []);
+
+  const handleCheckChange = async (checked: boolean) => {
+    try {
+      await updateTask({
+        id: task._id,
+        status: checked ? "done" : "next_up",
+      });
+    } catch {
+      toast.error("Failed to update task");
+    }
+  };
 
   const handleTitleSave = async () => {
     const trimmed = title.trim();
@@ -110,7 +126,6 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     }
   };
 
-  // Use useCallback to get fresh task reference in debounced save
   const saveDescription = useCallback(async (value: string, currentDescription: string | undefined) => {
     if (!isMountedRef.current) return;
 
@@ -128,7 +143,6 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
   const handleDescriptionChange = (value: string) => {
     setDescription(value);
 
-    // Debounce save (300ms per spec)
     if (descriptionTimeoutRef.current) {
       clearTimeout(descriptionTimeoutRef.current);
     }
@@ -173,133 +187,227 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     }
   };
 
+  const handleCategoryChange = async (newCategory: TaskCategory | undefined) => {
+    try {
+      await updateTask({ id: task._id, category: newCategory });
+    } catch {
+      toast.error("Failed to update category");
+    }
+  };
+
+  const categoryOptions = getCategoryOptions();
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Title */}
-      {isEditingTitle ? (
-        <Input
-          ref={titleInputRef}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={handleTitleSave}
-          onKeyDown={handleTitleKeyDown}
-          className="text-xl font-semibold h-auto py-1 px-2 border-0 focus-visible:ring-1"
-          aria-label="Task title"
+    <div className="h-full flex flex-col p-6 lg:p-8">
+      {/* Title with checkbox */}
+      <div className="flex items-start gap-4 mb-6">
+        <Checkbox
+          checked={isDone}
+          onCheckedChange={handleCheckChange}
+          className="h-7 w-7 rounded-full shrink-0 mt-1"
+          aria-label={`Mark task as ${isDone ? "incomplete" : "complete"}`}
         />
-      ) : (
-        <h1
-          className="text-xl font-semibold cursor-text hover:bg-muted/50 rounded px-2 py-1 -mx-2"
-          onClick={() => setIsEditingTitle(true)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && setIsEditingTitle(true)}
-          aria-label="Click to edit task title"
-        >
-          {task.title}
-        </h1>
-      )}
-
-      {/* Meta bar */}
-      <div className="flex flex-wrap gap-3">
-        {/* Status */}
-        <Select value={task.status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-9 w-[150px] border bg-background">
-            <SelectValue>
-              <div className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${STATUS_CONFIG[task.status].color}`} />
-                <span className="text-sm">{STATUS_CONFIG[task.status].label}</span>
-              </div>
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(STATUS_CONFIG).map(([value, config]) => (
-              <SelectItem key={value} value={value}>
-                <div className="flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${config.color}`} />
-                  <span>{config.label}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Priority */}
-        <Select value={task.priority} onValueChange={handlePriorityChange}>
-          <SelectTrigger className="h-9 w-[130px] border bg-background">
-            <SelectValue>
-              <div className="flex items-center gap-2">
-                <IconFlagFilled className={`h-4 w-4 ${PRIORITY_CONFIG[task.priority].color}`} />
-                <span className="text-sm">{PRIORITY_CONFIG[task.priority].label}</span>
-              </div>
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(PRIORITY_CONFIG).map(([value, config]) => (
-              <SelectItem key={value} value={value}>
-                <div className="flex items-center gap-2">
-                  <IconFlagFilled className={`h-4 w-4 ${config.color}`} />
-                  <span>{config.label}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Client */}
-        {isSubtask ? (
-          <div className="flex items-center gap-2 px-3 py-2 h-9 rounded-md border bg-muted/50 text-sm text-muted-foreground">
-            <IconUser className="h-4 w-4" />
-            <span className="truncate">{clientName || "No client"}</span>
-          </div>
+        {isEditingTitle ? (
+          <Input
+            ref={titleInputRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={handleTitleSave}
+            onKeyDown={handleTitleKeyDown}
+            className="text-2xl lg:text-3xl font-semibold h-auto py-1 px-2 border-0 focus-visible:ring-1 flex-1"
+            aria-label="Task title"
+          />
         ) : (
-          <Select value={task.clientId ?? "none"} onValueChange={handleClientChange}>
-            <SelectTrigger className="h-9 w-[150px] border bg-background">
-              <SelectValue placeholder="No client">
-                <div className="flex items-center gap-2 truncate">
-                  <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate text-sm">{clientName || "No client"}</span>
-                </div>
+          <h1
+            className={cn(
+              "text-2xl lg:text-3xl font-semibold cursor-text hover:bg-muted/30 rounded-lg px-2 py-1 -mx-2 flex-1 transition-colors leading-tight",
+              isDone && "line-through text-muted-foreground"
+            )}
+            onClick={() => setIsEditingTitle(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === "Enter" && setIsEditingTitle(true)}
+            aria-label="Click to edit task title"
+          >
+            {task.title}
+          </h1>
+        )}
+      </div>
+
+      {/* Attribute grid - responsive 2 columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 py-6 border-y border-border/50 mb-6">
+        {/* Status */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
+            <IconCalendarEvent className="h-4 w-4 shrink-0" />
+            <span>Status</span>
+          </div>
+          <Select value={task.status} onValueChange={handleStatusChange}>
+            <SelectTrigger className="h-9 flex-1 max-w-[180px] border-0 bg-muted/40 hover:bg-muted/60 transition-colors">
+              <SelectValue>
+                <Badge
+                  className={cn(
+                    "rounded-full px-3 py-0.5 text-xs font-medium border-0",
+                    STATUS_CONFIG[task.status].bg,
+                    STATUS_CONFIG[task.status].text
+                  )}
+                >
+                  {STATUS_CONFIG[task.status].label}
+                </Badge>
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">
-                <span className="text-muted-foreground">No client</span>
-              </SelectItem>
-              {clients?.map((client) => (
-                <SelectItem key={client._id} value={client._id}>
-                  {client.name}
+              {Object.entries(STATUS_CONFIG).map(([value, config]) => (
+                <SelectItem key={value} value={value}>
+                  <Badge
+                    className={cn(
+                      "rounded-full px-3 py-0.5 text-xs font-medium border-0",
+                      config.bg,
+                      config.text
+                    )}
+                  >
+                    {config.label}
+                  </Badge>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        )}
+        </div>
 
         {/* Assignees */}
-        <AssigneePopover
-          assigneeIds={task.assigneeIds}
-          onChange={handleAssigneesChange}
-        />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
+            <IconUsers className="h-4 w-4 shrink-0" />
+            <span>Assignees</span>
+          </div>
+          <AssigneePopover
+            assigneeIds={task.assigneeIds}
+            onChange={handleAssigneesChange}
+          />
+        </div>
+
+        {/* Priority */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
+            <IconFlagFilled className="h-4 w-4 shrink-0" />
+            <span>Priority</span>
+          </div>
+          <Select value={task.priority} onValueChange={handlePriorityChange}>
+            <SelectTrigger className="h-9 flex-1 max-w-[150px] border-0 bg-muted/40 hover:bg-muted/60 transition-colors">
+              <SelectValue>
+                <Badge
+                  className={cn(
+                    "rounded-full px-3 py-0.5 text-xs font-medium border-0 gap-1.5",
+                    PRIORITY_CONFIG[task.priority].bg,
+                    PRIORITY_CONFIG[task.priority].text
+                  )}
+                >
+                  <IconFlagFilled className="h-3 w-3" />
+                  {PRIORITY_CONFIG[task.priority].label}
+                </Badge>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(PRIORITY_CONFIG).map(([value, config]) => (
+                <SelectItem key={value} value={value}>
+                  <Badge
+                    className={cn(
+                      "rounded-full px-3 py-0.5 text-xs font-medium border-0 gap-1.5",
+                      config.bg,
+                      config.text
+                    )}
+                  >
+                    <IconFlagFilled className="h-3 w-3" />
+                    {config.label}
+                  </Badge>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Client */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
+            <IconUser className="h-4 w-4 shrink-0" />
+            <span>Client</span>
+          </div>
+          {isSubtask ? (
+            <span className="text-sm text-muted-foreground">{clientName || "No client"}</span>
+          ) : (
+            <Select value={task.clientId ?? "none"} onValueChange={handleClientChange}>
+              <SelectTrigger className="h-9 flex-1 max-w-[180px] border-0 bg-muted/40 hover:bg-muted/60 transition-colors">
+                <SelectValue placeholder="No client">
+                  <span className="text-sm">{clientName || "No client"}</span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <span className="text-muted-foreground">No client</span>
+                </SelectItem>
+                {clients?.map((client) => (
+                  <SelectItem key={client._id} value={client._id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        {/* Category */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
+            <IconCategory className="h-4 w-4 shrink-0" />
+            <span>Category</span>
+          </div>
+          <Select
+            value={(task as { category?: TaskCategory }).category ?? "none"}
+            onValueChange={(value) =>
+              handleCategoryChange(value === "none" ? undefined : (value as TaskCategory))
+            }
+          >
+            <SelectTrigger className="h-9 flex-1 max-w-[180px] border-0 bg-muted/40 hover:bg-muted/60 transition-colors">
+              <SelectValue placeholder="No category">
+                <span className="text-sm">
+                  {(task as { category?: TaskCategory }).category
+                    ? categoryOptions.find(
+                        (opt) => opt.value === (task as { category?: TaskCategory }).category
+                      )?.label
+                    : "No category"}
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">
+                <span className="text-muted-foreground">No category</span>
+              </SelectItem>
+              {categoryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Description */}
-      <div className="space-y-2">
-        <label htmlFor="task-description" className="text-sm font-medium text-muted-foreground">
-          Description
-        </label>
+      <div className="mb-6">
         <Textarea
-          id="task-description"
           value={description}
           onChange={(e) => handleDescriptionChange(e.target.value)}
           placeholder="Add a description..."
-          className="min-h-[100px] resize-none"
+          className="min-h-[120px] resize-none border-0 bg-muted/30 hover:bg-muted/40 focus-visible:ring-1 focus-visible:ring-ring/50 text-sm transition-colors"
+          aria-label="Task description"
         />
       </div>
 
-      <Separator />
-
-      {/* Subtasks section - only for main tasks */}
+      {/* Subtasks section - fills remaining space */}
       {!isSubtask && (
-        <SubtaskList parentTaskId={task._id} />
+        <div className="flex-1 min-h-0">
+          <SubtaskList parentTaskId={task._id} />
+        </div>
       )}
     </div>
   );

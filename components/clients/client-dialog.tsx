@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ClientForm, ClientFormValues } from "./client-form";
 import { toast } from "sonner";
+import { Currency } from "@/lib/report-utils";
 
 interface ClientDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface ClientDialogProps {
     name: string;
     email?: string;
     defaultHourlyRate?: number;
+    currency?: Currency;
   };
 }
 
@@ -41,6 +43,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           name: values.name,
           email: values.email || undefined,
           defaultHourlyRate: values.defaultHourlyRate,
+          currency: values.currency,
         });
         toast.success("Client updated successfully");
       } else {
@@ -48,6 +51,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           name: values.name,
           email: values.email || undefined,
           defaultHourlyRate: values.defaultHourlyRate,
+          currency: values.currency,
         });
         toast.success("Client created successfully");
       }
@@ -78,6 +82,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   name: client.name,
                   email: client.email,
                   defaultHourlyRate: client.defaultHourlyRate,
+                  currency: client.currency,
                 }
               : undefined
           }

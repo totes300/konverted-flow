@@ -10,7 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { TaskStatus, STATUS_CONFIG } from "@/lib/task-constants";
 
 interface StatusCellProps {
@@ -31,21 +33,31 @@ export function StatusCell({ taskId, status }: StatusCellProps) {
 
   return (
     <Select value={status} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-[140px] border-0 bg-transparent hover:bg-muted focus:ring-0 focus:ring-offset-0">
+      <SelectTrigger className="h-8 w-full border-none shadow-none bg-transparent hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:border-transparent">
         <SelectValue>
-          <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${STATUS_CONFIG[status].color}`} />
-            <span className="text-sm">{STATUS_CONFIG[status].label}</span>
-          </div>
+          <Badge
+            className={cn(
+              "rounded-full px-2.5 py-0.5 text-xs font-medium border-0",
+              STATUS_CONFIG[status].bg,
+              STATUS_CONFIG[status].text
+            )}
+          >
+            {STATUS_CONFIG[status].label}
+          </Badge>
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {Object.entries(STATUS_CONFIG).map(([value, config]) => (
           <SelectItem key={value} value={value}>
-            <div className="flex items-center gap-2">
-              <span className={`h-2 w-2 rounded-full ${config.color}`} />
-              <span>{config.label}</span>
-            </div>
+            <Badge
+              className={cn(
+                "rounded-full px-2.5 py-0.5 text-xs font-medium border-0",
+                config.bg,
+                config.text
+              )}
+            >
+              {config.label}
+            </Badge>
           </SelectItem>
         ))}
       </SelectContent>

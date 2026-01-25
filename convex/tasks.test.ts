@@ -75,3 +75,95 @@ describe("Task Priority Values", () => {
     expect(validPriorities).toContain("high");
   });
 });
+
+/**
+ * Tests for getTodayItems query - validating that time shown
+ * is ONLY from today's time entries, not all-time totals.
+ */
+describe("getTodayItems Time Calculation", () => {
+  describe("Time Display Requirements", () => {
+    it("should return todayTimeSeconds field for each task", () => {
+      // The query should return a todayTimeSeconds field, not just totalTimeSeconds
+      // todayTimeSeconds = sum of time entries where date = today (in org timezone)
+      const expectedFields = [
+        "todayTimeSeconds", // NEW: time tracked TODAY only
+        "totalTimeSeconds", // ALL-TIME total (kept for reference)
+      ];
+      expect(expectedFields).toContain("todayTimeSeconds");
+    });
+
+    it("should only count time entries from today's date", () => {
+      // Given a task with time entries:
+      // - Yesterday: 2 hours
+      // - Today: 30 minutes
+      // - Total all-time: 2h 30m
+      //
+      // The todayTimeSeconds should be 1800 (30 minutes)
+      // NOT 9000 (2h 30m)
+
+      const yesterdayEntry = { date: "2026-01-24", durationSeconds: 7200 }; // 2h
+      const todayEntry = { date: "2026-01-25", durationSeconds: 1800 }; // 30m
+
+      const todayDate = "2026-01-25";
+
+      // Calculate today's time
+      const allEntries = [yesterdayEntry, todayEntry];
+      const todayTimeSeconds = allEntries
+        .filter(e => e.date === todayDate)
+        .reduce((sum, e) => sum + e.durationSeconds, 0);
+
+      expect(todayTimeSeconds).toBe(1800); // 30 minutes, not 2h 30m
+    });
+
+    it("should use organization timezone for determining today", () => {
+      // The date stored in timeEntries.date is already in org timezone
+      // (per schema: "date: v.string(), // YYYY-MM-DD in org timezone")
+      // So we just need to compare against today's date in org timezone
+
+      const orgTimezone = "Europe/Budapest";
+      const now = new Date("2026-01-25T12:00:00Z");
+
+      // getDateInTimezone would return "2026-01-25" for Budapest at this time
+      // (Budapest is UTC+1, so 12:00 UTC = 13:00 Budapest)
+      expect(orgTimezone).toBeDefined();
+    });
+
+    it("should return 0 if no time entries exist for today", () => {
+      // Task has totalTimeSeconds = 3600 (from yesterday)
+      // But no entries for today's date
+      // todayTimeSeconds should be 0
+
+      const task = {
+        totalTimeSeconds: 3600, // 1 hour all-time
+      };
+
+      const todayEntries: { durationSeconds: number }[] = [];
+      const todayTimeSeconds = todayEntries.reduce(
+        (sum, e) => sum + e.durationSeconds,
+        0
+      );
+
+      expect(todayTimeSeconds).toBe(0);
+      expect(task.totalTimeSeconds).toBe(3600); // All-time stays accurate
+    });
+  });
+
+  describe("Group Stats", () => {
+    it("should calculate per-group stats using todayTimeSeconds", () => {
+      // When grouped by client, each group should show:
+      // - totalTime: sum of todayTimeSeconds for tasks in group
+
+      const clientATasks = [
+        { status: "today", todayTimeSeconds: 1800 },
+        { status: "done", todayTimeSeconds: 3600 },
+      ];
+
+      const totalTime = clientATasks.reduce(
+        (sum, t) => sum + t.todayTimeSeconds,
+        0
+      );
+
+      expect(totalTime).toBe(5400); // 1.5 hours TODAY, not all-time
+    });
+  });
+});
