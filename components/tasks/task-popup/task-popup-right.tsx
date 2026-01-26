@@ -7,7 +7,7 @@ interface TaskPopupRightProps {
   taskId: Id<"tasks">;
 }
 
-export function TaskPopupRight({ taskId }: TaskPopupRightProps) {
+export function TaskPopupRight({ taskId }: TaskPopupRightProps): React.ReactElement {
   return (
     <div className="flex flex-col h-full">
       <h3 className="text-sm font-medium text-muted-foreground px-4 pt-4 pb-2">

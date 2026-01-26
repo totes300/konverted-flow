@@ -22,17 +22,12 @@ interface TaskPopupProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function TaskPopup({ taskId, open, onOpenChange }: TaskPopupProps) {
-  const task = useQuery(
-    api.tasks.getById,
-    taskId ? { id: taskId } : "skip"
-  );
-
+export function TaskPopup({ taskId, open, onOpenChange }: TaskPopupProps): React.ReactElement {
+  const task = useQuery(api.tasks.getById, taskId ? { id: taskId } : "skip");
   const clients = useQuery(api.clients.list);
 
-  // Get client name for the task
-  const clientName = task?.clientId && clients
-    ? clients.find((c) => c._id === task.clientId)?.name
+  const clientName = task?.clientId
+    ? clients?.find((c) => c._id === task.clientId)?.name
     : undefined;
 
   const isLoading = taskId !== null && task === undefined;
@@ -111,7 +106,7 @@ export function TaskPopup({ taskId, open, onOpenChange }: TaskPopupProps) {
   );
 }
 
-function TaskPopupSkeleton() {
+function TaskPopupSkeleton(): React.ReactElement {
   return (
     <div className="flex flex-col h-full" role="status" aria-label="Loading task">
       {/* Close button placeholder */}

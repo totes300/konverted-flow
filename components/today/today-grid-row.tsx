@@ -23,7 +23,7 @@ interface TodayGridRowProps {
   onTaskClick?: (taskId: Id<"tasks">) => void;
 }
 
-export function TodayGridRow({ task, clientName, onTaskClick }: TodayGridRowProps) {
+export function TodayGridRow({ task, clientName, onTaskClick }: TodayGridRowProps): React.ReactElement {
   const {
     attributes,
     listeners,
@@ -38,12 +38,11 @@ export function TodayGridRow({ task, clientName, onTaskClick }: TodayGridRowProp
     transition,
   };
 
-  const handleRowClick = () => {
+  function handleRowClick(): void {
     onTaskClick?.(task._id);
-  };
+  }
 
-  // Build context line (parent → client)
-  const hasContext = task.parentTask || clientName;
+  const hasContext = Boolean(task.parentTask || clientName);
 
   return (
     <div

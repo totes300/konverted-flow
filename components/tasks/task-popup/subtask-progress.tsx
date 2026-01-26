@@ -5,9 +5,7 @@ interface SubtaskProgressProps {
   total: number;
 }
 
-export function SubtaskProgress({ completed, total }: SubtaskProgressProps) {
-  const percentage = total > 0 ? (completed / total) * 100 : 0;
-
+export function SubtaskProgress({ completed, total }: SubtaskProgressProps): React.ReactElement {
   if (total === 0) {
     return (
       <span className="text-xs text-muted-foreground tabular-nums">
@@ -15,6 +13,8 @@ export function SubtaskProgress({ completed, total }: SubtaskProgressProps) {
       </span>
     );
   }
+
+  const percentage = (completed / total) * 100;
 
   return (
     <div className="flex items-center gap-3">

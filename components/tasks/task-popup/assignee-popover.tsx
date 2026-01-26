@@ -28,19 +28,19 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function AssigneePopover({ assigneeIds, onChange }: AssigneePopoverProps) {
+export function AssigneePopover({ assigneeIds, onChange }: AssigneePopoverProps): React.ReactElement {
   const [open, setOpen] = useState(false);
   const users = useQuery(api.users.listByOrg);
 
-  const assignedUsers = users?.filter((user) => assigneeIds.includes(user._id)) || [];
+  const assignedUsers = users?.filter((user) => assigneeIds.includes(user._id)) ?? [];
 
-  const handleToggle = (userId: Id<"users">, checked: boolean) => {
+  function handleToggle(userId: Id<"users">, checked: boolean): void {
     if (checked) {
       onChange([...assigneeIds, userId]);
     } else {
       onChange(assigneeIds.filter((id) => id !== userId));
     }
-  };
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

@@ -13,7 +13,7 @@ interface SubtaskQuickAddProps {
   parentTaskId: Id<"tasks">;
 }
 
-export function SubtaskQuickAdd({ parentTaskId }: SubtaskQuickAddProps) {
+export function SubtaskQuickAdd({ parentTaskId }: SubtaskQuickAddProps): React.ReactElement {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +27,7 @@ export function SubtaskQuickAdd({ parentTaskId }: SubtaskQuickAddProps) {
     }
   }, [isAdding]);
 
-  const handleSubmit = async () => {
+  async function handleSubmit(): Promise<void> {
     const trimmed = title.trim();
     if (trimmed.length === 0) {
       setIsAdding(false);
@@ -44,28 +44,27 @@ export function SubtaskQuickAdd({ parentTaskId }: SubtaskQuickAddProps) {
         parentTaskId,
       });
       setTitle("");
-      // Keep input focused for rapid entry
       inputRef.current?.focus();
     } catch {
       toast.error("Failed to create subtask");
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
-  const handleCancel = () => {
+  function handleCancel(): void {
     setTitle("");
     setIsAdding(false);
-  };
+  }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  function handleKeyDown(e: React.KeyboardEvent): void {
     if (e.key === "Enter") {
       e.preventDefault();
       handleSubmit();
     } else if (e.key === "Escape") {
       handleCancel();
     }
-  };
+  }
 
   // Inline row that's always visible
   return (

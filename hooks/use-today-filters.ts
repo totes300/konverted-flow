@@ -12,18 +12,24 @@ export interface TodayFilters {
   groupBy: TodayGroupByOption;
 }
 
-export function useTodayFilters() {
+interface UseTodayFiltersReturn {
+  filters: TodayFilters;
+  setFilters: (newFilters: Partial<TodayFilters>) => void;
+  clearFilters: () => void;
+  activeFilterCount: number;
+  hasFilters: boolean;
+}
+
+export function useTodayFilters(): UseTodayFiltersReturn {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  const filters = useMemo<TodayFilters>(() => {
-    return {
-      clientId: (searchParams.get("client") as Id<"clients">) || undefined,
-      assigneeId: (searchParams.get("assignee") as Id<"users">) || undefined,
-      groupBy: (searchParams.get("groupBy") as TodayGroupByOption) || "none",
-    };
-  }, [searchParams]);
+  const filters = useMemo<TodayFilters>(() => ({
+    clientId: (searchParams.get("client") as Id<"clients">) || undefined,
+    assigneeId: (searchParams.get("assignee") as Id<"users">) || undefined,
+    groupBy: (searchParams.get("groupBy") as TodayGroupByOption) || "none",
+  }), [searchParams]);
 
   const setFilters = useCallback(
     (newFilters: Partial<TodayFilters>) => {
@@ -78,11 +84,8 @@ export function useTodayFilters() {
   }, [searchParams, router, pathname]);
 
   const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filters.clientId) count++;
-    if (filters.assigneeId) count++;
-    return count;
-  }, [filters]);
+    return (filters.clientId ? 1 : 0) + (filters.assigneeId ? 1 : 0);
+  }, [filters.clientId, filters.assigneeId]);
 
   const hasFilters = activeFilterCount > 0;
 

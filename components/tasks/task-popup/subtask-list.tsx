@@ -13,12 +13,12 @@ interface SubtaskListProps {
   parentTaskId: Id<"tasks">;
 }
 
-export function SubtaskList({ parentTaskId }: SubtaskListProps) {
+export function SubtaskList({ parentTaskId }: SubtaskListProps): React.ReactElement {
   const subtasks = useQuery(api.tasks.getSubtasks, { parentTaskId });
 
   const isLoading = subtasks === undefined;
-  const subtaskCount = subtasks?.length || 0;
-  const completedCount = subtasks?.filter((s) => s.status === "done").length || 0;
+  const subtaskCount = subtasks?.length ?? 0;
+  const completedCount = subtasks?.filter((s) => s.status === "done").length ?? 0;
 
   return (
     <div className="flex flex-col h-full">

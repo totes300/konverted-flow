@@ -42,9 +42,22 @@ interface TodayListProps {
   groupBy?: TodayGroupByOption;
 }
 
-type TodayTask = Doc<"tasks"> & { parentTask?: Doc<"tasks"> };
+type TodayTask = Doc<"tasks"> & {
+  parentTask?: Doc<"tasks">;
+  todayTimeSeconds?: number;
+};
 
-// Group header component
+interface TodayGroupProps {
+  groupName: string;
+  tasks: TodayTask[];
+  clientMap: Map<Id<"clients">, string>;
+  onTaskClick: (taskId: Id<"tasks">) => void;
+  defaultOpen?: boolean;
+  completedCount: number;
+  totalCount: number;
+  totalTime: number;
+}
+
 function TodayGroup({
   groupName,
   tasks,
@@ -54,16 +67,7 @@ function TodayGroup({
   completedCount,
   totalCount,
   totalTime,
-}: {
-  groupName: string;
-  tasks: TodayTask[];
-  clientMap: Map<Id<"clients">, string>;
-  onTaskClick: (taskId: Id<"tasks">) => void;
-  defaultOpen?: boolean;
-  completedCount: number;
-  totalCount: number;
-  totalTime: number;
-}) {
+}: TodayGroupProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -189,95 +193,67 @@ export function TodayList({ assigneeId, clientId, groupBy = "none" }: TodayListP
       return null;
     }
 
-    const groups = new Map<string, TodayTask[]>();
-
-    for (const task of localItems) {
-      let groupKey: string;
-      let groupLabel: string;
-
-      switch (groupBy) {
-        case "client":
-          groupKey = task.clientId || "none";
-          groupLabel = task.clientId ? clientMap.get(task.clientId) || "Unknown Client" : "No Client";
-          break;
-        case "priority":
-          groupKey = task.priority;
-          groupLabel = PRIORITY_CONFIG[task.priority as TaskPriority]?.label || task.priority;
-          break;
-        case "parent":
-          groupKey = task.parentTaskId || "none";
-          groupLabel = task.parentTask?.title || "No Parent Task";
-          break;
-        default:
-          groupKey = "all";
-          groupLabel = "All Tasks";
-      }
-
-      if (!groups.has(groupKey)) {
-        groups.set(groupKey, []);
-      }
-      groups.get(groupKey)!.push(task);
+    // Helper to get group key for a task
+    function getGroupKey(task: TodayTask): string {
+      if (groupBy === "client") return task.clientId || "none";
+      if (groupBy === "priority") return task.priority;
+      if (groupBy === "parent") return task.parentTaskId || "none";
+      return "all";
     }
 
-    // Helper to calculate stats for a group (using TODAY's time, not all-time)
-    const calcStats = (tasks: TodayTask[]) => ({
-      completedCount: tasks.filter(t => t.status === "done").length,
-      totalCount: tasks.length,
-      totalTime: tasks.reduce((sum, t) => sum + ((t as any).todayTimeSeconds || 0), 0),
-    });
-
-    // Convert to array and sort
-    const result: {
-      key: string;
-      label: string;
-      tasks: TodayTask[];
-      completedCount: number;
-      totalCount: number;
-      totalTime: number;
-    }[] = [];
-
-    if (groupBy === "priority") {
-      // Sort by priority order: high, medium, low
-      const priorityOrder = ["high", "medium", "low"];
-      for (const priority of priorityOrder) {
-        const tasks = groups.get(priority);
-        if (tasks && tasks.length > 0) {
-          const stats = calcStats(tasks);
-          result.push({
-            key: priority,
-            label: PRIORITY_CONFIG[priority as TaskPriority]?.label || priority,
-            tasks,
-            ...stats,
-          });
-        }
+    // Helper to get group label
+    function getGroupLabel(key: string, tasks: TodayTask[]): string {
+      if (groupBy === "client") {
+        return key === "none" ? "No Client" : clientMap.get(key as Id<"clients">) || "Unknown Client";
       }
+      if (groupBy === "priority") {
+        return PRIORITY_CONFIG[key as TaskPriority]?.label || key;
+      }
+      if (groupBy === "parent") {
+        return key === "none" ? "No Parent Task" : tasks[0]?.parentTask?.title || "Unknown";
+      }
+      return key;
+    }
+
+    // Helper to calculate stats for a group
+    function calcStats(tasks: TodayTask[]): { completedCount: number; totalCount: number; totalTime: number } {
+      return {
+        completedCount: tasks.filter((t) => t.status === "done").length,
+        totalCount: tasks.length,
+        totalTime: tasks.reduce((sum, t) => sum + (t.todayTimeSeconds ?? 0), 0),
+      };
+    }
+
+    // Build groups map
+    const groups = new Map<string, TodayTask[]>();
+    for (const task of localItems) {
+      const key = getGroupKey(task);
+      const existing = groups.get(key) || [];
+      groups.set(key, [...existing, task]);
+    }
+
+    // Sort entries based on groupBy type
+    let sortedEntries = Array.from(groups.entries());
+    if (groupBy === "priority") {
+      const priorityOrder = ["high", "medium", "low"];
+      sortedEntries = sortedEntries.sort(
+        (a, b) => priorityOrder.indexOf(a[0]) - priorityOrder.indexOf(b[0])
+      );
     } else {
-      // Sort alphabetically, but put "none" at the end
-      const entries = Array.from(groups.entries());
-      entries.sort((a, b) => {
+      sortedEntries.sort((a, b) => {
         if (a[0] === "none") return 1;
         if (b[0] === "none") return -1;
         return a[0].localeCompare(b[0]);
       });
-
-      for (const [key, tasks] of entries) {
-        let label: string;
-        switch (groupBy) {
-          case "client":
-            label = key === "none" ? "No Client" : clientMap.get(key as Id<"clients">) || "Unknown Client";
-            break;
-          case "parent":
-            label = key === "none" ? "No Parent Task" : tasks[0]?.parentTask?.title || "Unknown";
-            break;
-          default:
-            label = key;
-        }
-        const stats = calcStats(tasks);
-        result.push({ key, label, tasks, ...stats });
-      }
     }
 
-    return result;
+    // Build result array
+    return sortedEntries.map(([key, tasks]) => ({
+      key,
+      label: getGroupLabel(key, tasks),
+      tasks,
+      ...calcStats(tasks),
+    }));
   }, [localItems, groupBy, clientMap]);
 
   // Loading state

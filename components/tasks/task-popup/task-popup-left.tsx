@@ -35,11 +35,29 @@ import {
 import { getCategoryOptions, TaskCategory } from "@/lib/report-utils";
 
 interface TaskPopupLeftProps {
-  task: Doc<"tasks">;
+  task: Doc<"tasks"> & { category?: TaskCategory };
   clientName?: string;
 }
 
-export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
+interface AttributeRowProps {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}
+
+function AttributeRow({ icon, label, children }: AttributeRowProps): React.ReactElement {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
+        {icon}
+        <span>{label}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps): React.ReactElement {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -83,7 +101,7 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     };
   }, []);
 
-  const handleCheckChange = async (checked: boolean) => {
+  async function handleCheckChange(checked: boolean): Promise<void> {
     try {
       await updateTask({
         id: task._id,
@@ -92,9 +110,9 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     } catch {
       toast.error("Failed to update task");
     }
-  };
+  }
 
-  const handleTitleSave = async () => {
+  async function handleTitleSave(): Promise<void> {
     const trimmed = title.trim();
     if (trimmed === task.title) {
       setIsEditingTitle(false);
@@ -115,16 +133,16 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
       setTitle(task.title);
       toast.error("Failed to update title");
     }
-  };
+  }
 
-  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+  function handleTitleKeyDown(e: React.KeyboardEvent): void {
     if (e.key === "Enter") {
       handleTitleSave();
     } else if (e.key === "Escape") {
       setTitle(task.title);
       setIsEditingTitle(false);
     }
-  };
+  }
 
   const saveDescription = useCallback(async (value: string, currentDescription: string | undefined) => {
     if (!isMountedRef.current) return;
@@ -140,7 +158,7 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     }
   }, [task._id, updateTask]);
 
-  const handleDescriptionChange = (value: string) => {
+  function handleDescriptionChange(value: string): void {
     setDescription(value);
 
     if (descriptionTimeoutRef.current) {
@@ -150,50 +168,50 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
     descriptionTimeoutRef.current = setTimeout(() => {
       saveDescription(value, task.description);
     }, 300);
-  };
+  }
 
-  const handleStatusChange = async (newStatus: TaskStatus) => {
+  async function handleStatusChange(newStatus: TaskStatus): Promise<void> {
     try {
       await updateTask({ id: task._id, status: newStatus });
     } catch {
       toast.error("Failed to update status");
     }
-  };
+  }
 
-  const handlePriorityChange = async (newPriority: TaskPriority) => {
+  async function handlePriorityChange(newPriority: TaskPriority): Promise<void> {
     try {
       await updateTask({ id: task._id, priority: newPriority });
     } catch {
       toast.error("Failed to update priority");
     }
-  };
+  }
 
-  const handleClientChange = async (value: string) => {
+  async function handleClientChange(value: string): Promise<void> {
     if (isSubtask) return;
 
+    const newClientId = value === "none" ? undefined : (value as Id<"clients">);
     try {
-      const newClientId = value === "none" ? undefined : (value as Id<"clients">);
       await updateTask({ id: task._id, clientId: newClientId });
     } catch {
       toast.error("Failed to update client");
     }
-  };
+  }
 
-  const handleAssigneesChange = async (assigneeIds: Id<"users">[]) => {
+  async function handleAssigneesChange(assigneeIds: Id<"users">[]): Promise<void> {
     try {
       await updateTask({ id: task._id, assigneeIds });
     } catch {
       toast.error("Failed to update assignees");
     }
-  };
+  }
 
-  const handleCategoryChange = async (newCategory: TaskCategory | undefined) => {
+  async function handleCategoryChange(newCategory: TaskCategory | undefined): Promise<void> {
     try {
       await updateTask({ id: task._id, category: newCategory });
     } catch {
       toast.error("Failed to update category");
     }
-  };
+  }
 
   const categoryOptions = getCategoryOptions();
 
@@ -237,11 +255,7 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
       {/* Attribute grid - responsive 2 columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 py-6 border-y border-border/50 mb-6">
         {/* Status */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
-            <IconCalendarEvent className="h-4 w-4 shrink-0" />
-            <span>Status</span>
-          </div>
+        <AttributeRow icon={<IconCalendarEvent className="h-4 w-4 shrink-0" />} label="Status">
           <Select value={task.status} onValueChange={handleStatusChange}>
             <SelectTrigger className="h-9 flex-1 max-w-[180px] border-0 bg-muted/40 hover:bg-muted/60 transition-colors">
               <SelectValue>
@@ -272,26 +286,18 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </AttributeRow>
 
         {/* Assignees */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
-            <IconUsers className="h-4 w-4 shrink-0" />
-            <span>Assignees</span>
-          </div>
+        <AttributeRow icon={<IconUsers className="h-4 w-4 shrink-0" />} label="Assignees">
           <AssigneePopover
             assigneeIds={task.assigneeIds}
             onChange={handleAssigneesChange}
           />
-        </div>
+        </AttributeRow>
 
         {/* Priority */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
-            <IconFlagFilled className="h-4 w-4 shrink-0" />
-            <span>Priority</span>
-          </div>
+        <AttributeRow icon={<IconFlagFilled className="h-4 w-4 shrink-0" />} label="Priority">
           <Select value={task.priority} onValueChange={handlePriorityChange}>
             <SelectTrigger className="h-9 flex-1 max-w-[150px] border-0 bg-muted/40 hover:bg-muted/60 transition-colors">
               <SelectValue>
@@ -324,14 +330,10 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </AttributeRow>
 
         {/* Client */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
-            <IconUser className="h-4 w-4 shrink-0" />
-            <span>Client</span>
-          </div>
+        <AttributeRow icon={<IconUser className="h-4 w-4 shrink-0" />} label="Client">
           {isSubtask ? (
             <span className="text-sm text-muted-foreground">{clientName || "No client"}</span>
           ) : (
@@ -353,16 +355,12 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
               </SelectContent>
             </Select>
           )}
-        </div>
+        </AttributeRow>
 
         {/* Category */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-[100px]">
-            <IconCategory className="h-4 w-4 shrink-0" />
-            <span>Category</span>
-          </div>
+        <AttributeRow icon={<IconCategory className="h-4 w-4 shrink-0" />} label="Category">
           <Select
-            value={(task as { category?: TaskCategory }).category ?? "none"}
+            value={task.category ?? "none"}
             onValueChange={(value) =>
               handleCategoryChange(value === "none" ? undefined : (value as TaskCategory))
             }
@@ -370,10 +368,8 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
             <SelectTrigger className="h-9 flex-1 max-w-[180px] border-0 bg-muted/40 hover:bg-muted/60 transition-colors">
               <SelectValue placeholder="No category">
                 <span className="text-sm">
-                  {(task as { category?: TaskCategory }).category
-                    ? categoryOptions.find(
-                        (opt) => opt.value === (task as { category?: TaskCategory }).category
-                      )?.label
+                  {task.category
+                    ? categoryOptions.find((opt) => opt.value === task.category)?.label
                     : "No category"}
                 </span>
               </SelectValue>
@@ -389,7 +385,7 @@ export function TaskPopupLeft({ task, clientName }: TaskPopupLeftProps) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </AttributeRow>
       </div>
 
       {/* Description */}

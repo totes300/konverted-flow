@@ -16,7 +16,7 @@ interface ActivityFeedProps {
   taskId: Id<"tasks">;
 }
 
-export function ActivityFeed({ taskId }: ActivityFeedProps) {
+export function ActivityFeed({ taskId }: ActivityFeedProps): React.ReactElement {
   const { user: clerkUser } = useUser();
   const activities = useQuery(api.activities.getByTaskId, { taskId });
   const users = useQuery(api.users.listByOrg);
@@ -98,7 +98,7 @@ export function ActivityFeed({ taskId }: ActivityFeedProps) {
   );
 }
 
-function EmptyState() {
+function EmptyState(): React.ReactElement {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-muted">
@@ -112,7 +112,7 @@ function EmptyState() {
   );
 }
 
-function ActivityFeedSkeleton() {
+function ActivityFeedSkeleton(): React.ReactElement {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 p-4 space-y-4">

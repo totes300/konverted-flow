@@ -50,7 +50,26 @@ interface TodayFiltersProps {
   isGrouped: boolean;
 }
 
-export function TodayFilters({ completedCount, totalCount, totalTimeToday, isGrouped }: TodayFiltersProps) {
+interface FilterPillProps {
+  label: string;
+  onClear: () => void;
+}
+
+function FilterPill({ label, onClear }: FilterPillProps): React.ReactElement {
+  return (
+    <Badge variant="secondary" className="h-7 gap-1 pl-2.5 pr-1.5 font-normal">
+      {label}
+      <button
+        onClick={onClear}
+        className="ml-0.5 rounded-sm p-0.5 hover:bg-background/50"
+      >
+        <IconX className="h-3 w-3" />
+      </button>
+    </Badge>
+  );
+}
+
+export function TodayFilters({ completedCount, totalCount, totalTimeToday, isGrouped }: TodayFiltersProps): React.ReactElement {
   const { filters, setFilters, clearFilters, hasFilters } = useTodayFilters();
 
   const [clientOpen, setClientOpen] = useState(false);
@@ -59,25 +78,16 @@ export function TodayFilters({ completedCount, totalCount, totalTimeToday, isGro
   const clients = useQuery(api.clients.list);
   const users = useQuery(api.users.listByOrg);
 
-  const handleClientSelect = (clientId: Id<"clients"> | null) => {
+  function handleClientSelect(clientId: Id<"clients"> | null): void {
     setFilters({ clientId: clientId || undefined });
     setClientOpen(false);
-  };
+  }
 
-  const handleAssigneeSelect = (userId: Id<"users"> | null) => {
+  function handleAssigneeSelect(userId: Id<"users"> | null): void {
     setFilters({ assigneeId: userId || undefined });
     setAssigneeOpen(false);
-  };
+  }
 
-  const handleClearClient = () => {
-    setFilters({ clientId: undefined });
-  };
-
-  const handleClearAssignee = () => {
-    setFilters({ assigneeId: undefined });
-  };
-
-  // Get display names for active filters
   const selectedClientName = filters.clientId
     ? clients?.find((c) => c._id === filters.clientId)?.name
     : null;
@@ -256,39 +266,18 @@ export function TodayFilters({ completedCount, totalCount, totalTimeToday, isGro
       {/* Active Filter Pills */}
       {hasFilters && (
         <div className="flex flex-wrap items-center gap-2">
-          {/* Client Pill */}
           {selectedClientName && (
-            <Badge
-              variant="secondary"
-              className="h-7 gap-1 pl-2.5 pr-1.5 font-normal"
-            >
-              {selectedClientName}
-              <button
-                onClick={handleClearClient}
-                className="ml-0.5 rounded-sm p-0.5 hover:bg-background/50"
-              >
-                <IconX className="h-3 w-3" />
-              </button>
-            </Badge>
+            <FilterPill
+              label={selectedClientName}
+              onClear={() => setFilters({ clientId: undefined })}
+            />
           )}
-
-          {/* Assignee Pill */}
           {selectedAssigneeName && (
-            <Badge
-              variant="secondary"
-              className="h-7 gap-1 pl-2.5 pr-1.5 font-normal"
-            >
-              {selectedAssigneeName}
-              <button
-                onClick={handleClearAssignee}
-                className="ml-0.5 rounded-sm p-0.5 hover:bg-background/50"
-              >
-                <IconX className="h-3 w-3" />
-              </button>
-            </Badge>
+            <FilterPill
+              label={selectedAssigneeName}
+              onClear={() => setFilters({ assigneeId: undefined })}
+            />
           )}
-
-          {/* Clear All */}
           <button
             onClick={clearFilters}
             className="ml-2 text-sm text-muted-foreground hover:text-foreground"

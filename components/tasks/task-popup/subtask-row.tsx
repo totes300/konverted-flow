@@ -24,7 +24,7 @@ interface SubtaskRowProps {
   subtask: Doc<"tasks">;
 }
 
-export function SubtaskRow({ subtask }: SubtaskRowProps) {
+export function SubtaskRow({ subtask }: SubtaskRowProps): React.ReactElement {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(subtask.title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,7 +45,7 @@ export function SubtaskRow({ subtask }: SubtaskRowProps) {
     }
   }, [isEditing]);
 
-  const handleCheckChange = async (checked: boolean) => {
+  async function handleCheckChange(checked: boolean): Promise<void> {
     try {
       await updateTask({
         id: subtask._id,
@@ -54,9 +54,9 @@ export function SubtaskRow({ subtask }: SubtaskRowProps) {
     } catch {
       toast.error("Failed to update subtask");
     }
-  };
+  }
 
-  const handleTitleSave = async () => {
+  async function handleTitleSave(): Promise<void> {
     const trimmed = title.trim();
     if (trimmed === subtask.title) {
       setIsEditing(false);
@@ -77,25 +77,25 @@ export function SubtaskRow({ subtask }: SubtaskRowProps) {
       setTitle(subtask.title);
       toast.error("Failed to update subtask");
     }
-  };
+  }
 
-  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+  function handleTitleKeyDown(e: React.KeyboardEvent): void {
     if (e.key === "Enter") {
       handleTitleSave();
     } else if (e.key === "Escape") {
       setTitle(subtask.title);
       setIsEditing(false);
     }
-  };
+  }
 
-  const handleDelete = async () => {
+  async function handleDelete(): Promise<void> {
     try {
       await deleteTask({ id: subtask._id });
       toast.success("Subtask deleted");
     } catch {
       toast.error("Failed to delete subtask");
     }
-  };
+  }
 
   return (
     <div className="group/row grid grid-cols-[1fr_140px_135px_145px_40px] items-center border-b border-border/40 hover:bg-muted/30 transition-colors duration-100">

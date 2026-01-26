@@ -10,13 +10,13 @@ interface TodayProgressProps {
   totalTimeToday?: number; // in seconds
 }
 
-export function TodayProgress({ completed, total, totalTimeToday = 0 }: TodayProgressProps) {
-  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const allDone = total > 0 && completed === total;
-
+export function TodayProgress({ completed, total, totalTimeToday = 0 }: TodayProgressProps): React.ReactElement | null {
   if (total === 0) {
     return null;
   }
+
+  const percentage = Math.round((completed / total) * 100);
+  const allDone = completed === total;
 
   return (
     <div className="flex items-center gap-4 py-2">
